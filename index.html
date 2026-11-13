@@ -17,12 +17,13 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- jsPDF & html2canvas para geração de PDFs e Imagens -->
+  <!-- jsPDF & html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-  <!-- QRCode.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Firebase SDK para Sincronização em Nuvem -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <style>
     :root {
@@ -46,7 +47,7 @@
     }
 
     .glass-card {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(200, 150, 30, 0.35);
@@ -66,18 +67,9 @@
       box-shadow: 0 4px 20px rgba(200, 150, 30, 0.28);
     }
 
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #e1f0f7;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #c8961e;
-      border-radius: 3px;
-    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #e1f0f7; }
+    ::-webkit-scrollbar-thumb { background: #c8961e; border-radius: 3px; }
 
     @media print {
       .no-print { display: none !important; }
@@ -86,10 +78,10 @@
 </head>
 <body class="antialiased selection:bg-amber-200 selection:text-slate-900">
 
-  <!-- Tela de Login / Seleção de Perfil -->
+  <!-- Tela de Login / Seleção de Cargo -->
   <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4">
     <div class="glass-card w-full max-w-md rounded-2xl p-6 sm:p-8 text-center relative overflow-hidden">
-      <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden crest-frame bg-white flex items-center justify-center">
+      <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden crest-frame bg-white flex items-center justify-center shadow-lg">
         <img id="loginCrestImg" src="" alt="Brasão Ilé Asè" class="w-full h-full object-cover" />
       </div>
       <h1 class="text-xl sm:text-2xl font-bold text-[#0f2942] leading-tight">Ilé Asè Omo Adeolá</h1>
@@ -113,9 +105,9 @@
       </form>
 
       <div class="mt-5 pt-4 border-t border-slate-200/80 text-xs text-slate-500">
-        <p class="font-semibold text-slate-700 mb-1">Acesso Rápido (Demonstração):</p>
+        <p class="font-semibold text-slate-700 mb-1">Acesso Rápido por Cargo:</p>
         <div class="flex flex-wrap justify-center gap-1.5">
-          <button type="button" onclick="quickFillLogin('admin@ilease.com', '123456')" class="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md font-medium hover:bg-amber-200">Babalorixá / Admin</button>
+          <button type="button" onclick="quickFillLogin('admin@ilease.com', '123456')" class="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md font-medium hover:bg-amber-200">Direção / Admin</button>
           <button type="button" onclick="quickFillLogin('tesouraria@ilease.com', '123456')" class="px-2.5 py-1 bg-sky-100 text-sky-900 rounded-md font-medium hover:bg-sky-200">Tesoureiro</button>
           <button type="button" onclick="quickFillLogin('secretaria@ilease.com', '123456')" class="px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-md font-medium hover:bg-emerald-200">Secretário(a)</button>
         </div>
@@ -129,10 +121,9 @@
     <!-- Sidebar / Menu Lateral -->
     <aside class="w-full lg:w-72 navy-gradient text-white flex flex-col justify-between shrink-0 shadow-2xl z-30">
       <div>
-        <!-- Cabeçalho do Brasão -->
         <div class="p-5 text-center border-b border-amber-500/20">
           <div class="relative w-28 h-28 mx-auto rounded-2xl overflow-hidden crest-frame bg-white group cursor-pointer" onclick="openCrestModal()">
-            <img id="sidebarCrestImg" src="" alt="Brasão Oficial" class="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+            <img id="sidebarCrestImg" src="" alt="Logotipo Oficial" class="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
               <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-expand"></i> Ampliar</span>
             </div>
@@ -147,15 +138,15 @@
           <p class="text-[11px] text-sky-200/80 uppercase tracking-wider">Asè Osun Agbara Injilé</p>
         </div>
 
-        <!-- Perfil Logado -->
+        <!-- Perfil Logado & Configuração de Nuvem -->
         <div class="px-4 py-3 bg-white/5 border-b border-amber-500/20 flex items-center justify-between">
           <div class="overflow-hidden">
             <p id="currentUserName" class="text-xs font-bold text-white truncate">Usuário</p>
             <span id="currentUserRoleBadge" class="inline-block text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-semibold uppercase mt-0.5">Cargo</span>
           </div>
           <div class="flex items-center gap-1">
-            <button id="btnManageUsers" onclick="openUsersModal()" title="Gerenciar Contas e Permissões" class="p-2 rounded-lg hover:bg-white/10 text-amber-300 transition">
-              <i class="fa-solid fa-user-shield"></i>
+            <button onclick="openCloudConfigModal()" title="Configurar Sincronização em Nuvem (Firebase)" class="p-2 rounded-lg hover:bg-white/10 text-sky-300 transition">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
             </button>
             <button onclick="logout()" title="Sair / Trocar Conta" class="p-2 rounded-lg hover:bg-red-500/20 text-red-300 transition">
               <i class="fa-solid fa-right-from-bracket"></i>
@@ -183,17 +174,17 @@
         </nav>
       </div>
 
-      <!-- Status de Sincronização -->
+      <!-- Status de Sincronização em Nuvem -->
       <div class="p-4 border-t border-amber-500/20 text-xs flex items-center justify-between text-sky-200/80">
         <span class="flex items-center gap-2">
-          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="syncStatusText">Sincronizado</span>
+          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+          <span id="syncStatusText">Modo Local</span>
         </span>
-        <span class="text-[10px] text-amber-300/70">PWA v2.5</span>
+        <span class="text-[10px] text-amber-300/70">Nuvem Pronta</span>
       </div>
     </aside>
 
-    <!-- Área de Conteúdo Principal -->
+    <!-- Conteúdo Principal -->
     <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
       
       <!-- Marca d'água sutil de fundo -->
@@ -201,14 +192,14 @@
         <img id="bgWatermarkImg" src="" alt="" class="w-[450px] h-[450px] object-contain rounded-full" />
       </div>
 
-      <div class="relative z-10 max-w-6xl mx-auto">
+      <div class="relative z-10 max-w-6xl mx-auto space-y-6">
 
         <!-- ABA 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-content space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 class="text-2xl sm:text-3xl font-bold text-[#0f2942]">Painel Administrativo</h1>
-              <p class="text-sm text-slate-600">Visão geral do Ilé Asè Omo Adeolá Asè Osun Agbara Injilé</p>
+              <p class="text-sm text-slate-600">Visão corporativa e simultânea do Ilé Asè Omo Adeolá</p>
             </div>
             <div class="text-right">
               <span id="currentDateDisplay" class="inline-block px-4 py-2 rounded-xl glass-card text-xs font-bold text-[#0f2942]"></span>
@@ -223,7 +214,7 @@
                 <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fa-solid fa-users"></i></div>
               </div>
               <p id="statTotalMembers" class="text-2xl font-extrabold text-[#0f2942] mt-2">0</p>
-              <p class="text-xs text-slate-500 mt-1">Filhos e colaboradores ativos</p>
+              <p class="text-xs text-slate-500 mt-1">Cadastros manuais ativos</p>
             </div>
 
             <div class="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500">
@@ -232,7 +223,7 @@
                 <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-arrow-trend-up"></i></div>
               </div>
               <p id="statTotalIncome" class="text-2xl font-extrabold text-emerald-700 mt-2">R$ 0,00</p>
-              <p class="text-xs text-slate-500 mt-1">Arrecadação e trabalhos</p>
+              <p class="text-xs text-slate-500 mt-1">Tesouraria sincronizada</p>
             </div>
 
             <div class="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500">
@@ -254,21 +245,21 @@
             </div>
           </div>
 
-          <!-- Destaque do Brasão + Próximos Eventos -->
+          <!-- Logotipo Oficial + Próximos Eventos -->
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="glass-card rounded-2xl p-6 flex flex-col items-center text-center">
-              <div class="w-44 h-44 rounded-2xl overflow-hidden crest-frame bg-white mb-4">
-                <img id="dashCrestImg" src="" alt="Brasão Ilé Asè" class="w-full h-full object-cover" />
+              <div class="w-44 h-44 rounded-2xl overflow-hidden crest-frame bg-white mb-4 shadow-md">
+                <img id="dashCrestImg" src="" alt="Brasão Oficial" class="w-full h-full object-cover" />
               </div>
               <h3 class="text-lg font-bold text-[#0f2942]">Ilé Asè Omo Adeolá</h3>
               <p class="text-xs font-bold text-amber-700 uppercase">Asè Osun Agbara Injilé</p>
-              <p class="text-xs text-slate-600 mt-2">Fundado em 1991 • Tradição, Fé e Caridade.</p>
+              <p class="text-xs text-slate-600 mt-2">Fundado em 1991 • Gestão Corporativa Integrada.</p>
             </div>
 
             <div class="lg:col-span-2 glass-card rounded-2xl p-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-[#0f2942]"><i class="fa-solid fa-calendar-check text-amber-600 mr-2"></i>Próximos Eventos & Giras</h3>
-                <button onclick="switchTab('events')" class="text-xs font-bold text-amber-700 hover:underline">Ver Agenda Completa</button>
+                <button onclick="switchTab('events')" class="text-xs font-bold text-amber-700 hover:underline">Ver Agenda</button>
               </div>
               <div id="dashEventsList" class="space-y-3">
                 <p class="text-sm text-slate-500 italic">Nenhum evento agendado no momento.</p>
@@ -281,16 +272,15 @@
         <section id="tab-members" class="tab-content hidden space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 class="text-2xl font-bold text-[#0f2942]">Cadastro de Integrantes</h1>
-              <p class="text-sm text-slate-600">Dados pessoais, cargos sacros, mensalidades, trabalhos e emissão de carteirinhas em PDF</p>
+              <h1 class="text-2xl font-bold text-[#0f2942]">Cadastro Manual de Integrantes</h1>
+              <p class="text-sm text-slate-600">Gerencie membros, cargos sacros e emita carteirinhas oficiais em PDF</p>
             </div>
             <button id="btnNewMember" onclick="openMemberModal()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start">
               <i class="fa-solid fa-user-plus"></i> Novo Integrante
             </button>
           </div>
 
-          <!-- Busca -->
-          <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row gap-3">
+          <div class="glass-card rounded-2xl p-4">
             <div class="relative flex-1">
               <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
               <input type="text" id="memberSearchInput" oninput="renderMembers()" placeholder="Buscar por nome, cargo ou Orixá..."
@@ -298,7 +288,6 @@
             </div>
           </div>
 
-          <!-- Lista de Integrantes -->
           <div id="membersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </section>
 
@@ -306,8 +295,8 @@
         <section id="tab-finance" class="tab-content hidden space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 class="text-2xl font-bold text-[#0f2942]">Controle Financeiro da Casa</h1>
-              <p class="text-sm text-slate-600">Lançamento de mensalidades, trabalhos concretizados, doações e despesas</p>
+              <h1 class="text-2xl font-bold text-[#0f2942]">Controle Financeiro & Tesouraria</h1>
+              <p class="text-sm text-slate-600">Lançamentos em tempo real controlados pelo setor financeiro</p>
             </div>
             <button id="btnNewFinance" onclick="openFinanceModal()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start">
               <i class="fa-solid fa-plus"></i> Novo Lançamento
@@ -320,7 +309,7 @@
                 <thead>
                   <tr class="navy-gradient text-amber-300 text-xs uppercase">
                     <th class="p-4">Data</th>
-                    <th class="p-4">Descrição / Trabalho</th>
+                    <th class="p-4">Descrição</th>
                     <th class="p-4">Integrante</th>
                     <th class="p-4">Categoria</th>
                     <th class="p-4">Valor</th>
@@ -338,7 +327,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 class="text-2xl font-bold text-[#0f2942]">Agenda & Divulgação Social</h1>
-              <p class="text-sm text-slate-600">Planejamento de giras, festas e geração de convites visuais para WhatsApp e Instagram</p>
+              <p class="text-sm text-slate-600">Giras, festas e convites visuais para WhatsApp e Instagram</p>
             </div>
             <button id="btnNewEvent" onclick="openEventModal()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start">
               <i class="fa-solid fa-calendar-plus"></i> Agendar Evento
@@ -353,7 +342,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 class="text-2xl font-bold text-[#0f2942]">Acervo Fotográfico da Casa</h1>
-              <p class="text-sm text-slate-600">Registro de celebrações, obrigações e momentos especiais</p>
+              <p class="text-sm text-slate-600">Registro de celebrações e momentos especiais</p>
             </div>
             <label class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start cursor-pointer">
               <i class="fa-solid fa-cloud-arrow-up"></i> Adicionar Foto
@@ -368,7 +357,7 @@
     </main>
   </div>
 
-  <!-- MODAL: CADASTRO / EDIÇÃO DE INTEGRANTE -->
+  <!-- MODAL: CADASTRO DE INTEGRANTE -->
   <div id="memberModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
     <div class="glass-card w-full max-w-2xl rounded-2xl p-6 my-8">
       <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
@@ -428,9 +417,8 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Histórico de Trabalhos Concretizados / Obrigações</label>
-          <textarea id="memberWorks" rows="3" placeholder="Descreva obrigações, ebós, assentamentos ou trabalhos realizados..."
-            class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm"></textarea>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Histórico de Trabalhos e Obrigações</label>
+          <textarea id="memberWorks" rows="3" placeholder="Descreva obrigações, ebós, assentamentos..." class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm"></textarea>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
@@ -441,7 +429,7 @@
     </div>
   </div>
 
-  <!-- MODAL: NOVO LANÇAMENTO FINANCEIRO -->
+  <!-- MODAL: LANÇAMENTO FINANCEIRO -->
   <div id="financeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
     <div class="glass-card w-full max-w-md rounded-2xl p-6">
       <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
@@ -474,7 +462,7 @@
         </div>
         <div>
           <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Descrição *</label>
-          <input type="text" id="finDesc" required placeholder="Ex: Mensalidade Novembro / Trabalho de Oxum" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
+          <input type="text" id="finDesc" required placeholder="Ex: Mensalidade" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -494,7 +482,7 @@
     </div>
   </div>
 
-  <!-- MODAL: NOVO EVENTO -->
+  <!-- MODAL: AGENDAR EVENTO -->
   <div id="eventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
     <div class="glass-card w-full max-w-md rounded-2xl p-6">
       <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
@@ -504,7 +492,7 @@
       <form id="eventForm" class="space-y-4">
         <div>
           <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Título do Evento *</label>
-          <input type="text" id="evTitle" required placeholder="Ex: Festa de Oxum / Gira de Caboclos" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
+          <input type="text" id="evTitle" required placeholder="Ex: Festa de Oxum" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -518,7 +506,7 @@
         </div>
         <div>
           <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Orientações / Traje</label>
-          <textarea id="evDesc" rows="3" placeholder="Ex: Traje branco obrigatório. Traga flores amarelas..." class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm"></textarea>
+          <textarea id="evDesc" rows="3" placeholder="Ex: Traje branco..." class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm"></textarea>
         </div>
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
           <button type="button" onclick="closeModal('eventModal')" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold text-sm">Cancelar</button>
@@ -528,261 +516,88 @@
     </div>
   </div>
 
-  <!-- MODAL: CARD DE DIVULGAÇÃO REDES SOCIAIS -->
-  <div id="socialCardModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="glass-card w-full max-w-md rounded-2xl p-6 text-center">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base font-bold text-[#0f2942]">Convite para Redes Sociais</h3>
-        <button onclick="closeModal('socialCardModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+  <!-- MODAL: CONFIGURAÇÃO DE NUVEM (FIREBASE) -->
+  <div id="cloudModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="glass-card w-full max-w-lg rounded-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-lg font-bold text-[#0f2942]">Sincronização em Nuvem (Ilé Asè)</h3>
+        <button onclick="closeModal('cloudModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
-
-      <!-- Área que será convertida em imagem -->
-      <div id="socialPosterArea" class="w-full aspect-[4/5] rounded-2xl navy-gradient p-6 flex flex-col justify-between items-center text-center border-4 border-amber-400 shadow-2xl relative overflow-hidden">
-        <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-amber-300 bg-white shadow-lg">
-          <img id="posterCrestImg" src="" alt="Brasão" class="w-full h-full object-cover" />
-        </div>
-
-        <div>
-          <p class="text-[10px] tracking-[0.2em] uppercase text-amber-300 font-bold">Ilé Asè Omo Adeolá Asè Osun Agbara Injilé</p>
-          <h2 id="posterTitle" class="text-2xl font-extrabold text-white mt-2 leading-tight">Título do Evento</h2>
-          <div class="w-16 h-0.5 bg-amber-400 mx-auto my-3"></div>
-          <p id="posterDesc" class="text-xs text-sky-100 px-2 leading-relaxed">Descrição do evento</p>
-        </div>
-
-        <div class="w-full bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-amber-400/30">
-          <p id="posterDateTime" class="text-sm font-bold text-amber-300">Data e Hora</p>
-          <p class="text-[10px] text-sky-200 mt-0.5">Sejam todos bem-vindos • Axé!</p>
-        </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Cole abaixo o objeto de configuração do seu projeto no Firebase para que os responsáveis (Tesouraria, Secretaria e Direção) atualizem dados simultaneamente em tempo real:
+      </p>
+      <div>
+        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Chave de Conexão Firebase (JSON):</label>
+        <textarea id="cfgFirebase" rows="5" placeholder='{"apiKey": "...", "projectId": "..."}' class="w-full border p-2 rounded font-mono text-[11px] bg-slate-50"></textarea>
       </div>
-
-      <button onclick="downloadSocialPoster()" class="mt-4 w-full py-3 rounded-xl gold-gradient text-slate-950 font-extrabold text-sm shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
-        <i class="fa-solid fa-download"></i> Baixar Imagem (Instagram / WhatsApp)
-      </button>
-    </div>
-  </div>
-
-  <!-- MODAL: GERENCIAR CONTAS E PERMISSÕES -->
-  <div id="usersModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div class="glass-card w-full max-w-lg rounded-2xl p-6">
-      <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-        <h3 class="text-lg font-bold text-[#0f2942]">Contas de Acesso & Cargos</h3>
-        <button onclick="closeModal('usersModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
-      </div>
-
-      <form id="newUserForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5 bg-white/70 p-3 rounded-xl border border-slate-200">
-        <input type="text" id="accName" required placeholder="Nome do Responsável" class="px-3 py-2 rounded-lg border border-slate-300 text-xs" />
-        <input type="email" id="accEmail" required placeholder="E-mail de acesso" class="px-3 py-2 rounded-lg border border-slate-300 text-xs" />
-        <input type="password" id="accPass" required placeholder="Senha" class="px-3 py-2 rounded-lg border border-slate-300 text-xs" />
-        <select id="accRole" class="px-3 py-2 rounded-lg border border-slate-300 text-xs">
-          <option value="admin">Administrador (Acesso Total)</option>
-          <option value="tesoureiro">Tesoureiro (Financeiro)</option>
-          <option value="secretario">Secretário(a) (Cadastros/Eventos)</option>
-          <option value="consulta">Consulta (Somente Leitura)</option>
-        </select>
-        <button type="submit" class="sm:col-span-2 py-2 rounded-lg navy-gradient text-amber-300 font-bold text-xs">Adicionar Nova Conta</button>
-      </form>
-
-      <div id="accountsList" class="space-y-2 max-h-48 overflow-y-auto"></div>
-    </div>
-  </div>
-
-  <!-- MODAL: AMPLIAR BRASÃO -->
-  <div id="crestModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4" onclick="closeModal('crestModal')">
-    <div class="max-w-md w-full bg-white p-3 rounded-2xl crest-frame" onclick="event.stopPropagation()">
-      <img id="modalFullCrestImg" src="" alt="Brasão Oficial" class="w-full rounded-xl" />
-      <div class="mt-3 flex justify-between items-center px-1">
-        <span class="text-xs font-bold text-[#0f2942]">Ilé Asè Omo Adeolá Asè Osun Agbara Injilé</span>
-        <button onclick="closeModal('crestModal')" class="px-3 py-1 rounded-lg bg-slate-200 text-xs font-bold">Fechar</button>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="salvarConexaoNuvem()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm">Conectar Nuvem Agora</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // 1. BRASÃO PADRÃO SVG COLORIDO (OXUM / OURO / AZUL)
-    // ==========================================
-    const DEFAULT_CREST_SVG = `data:image/svg+xml;utf8,` + encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
-        <defs>
-          <radialGradient id="bg" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#1b4d7a"/>
-            <stop offset="100%" stop-color="#091d32"/>
-          </radialGradient>
-          <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#f7dc6f"/>
-            <stop offset="50%" stop-color="#d4ac0d"/>
-            <stop offset="100%" stop-color="#9a7d0a"/>
-          </linearGradient>
-        </defs>
-        <rect width="400" height="400" fill="url(#bg)"/>
-        <circle cx="200" cy="200" r="175" fill="none" stroke="url(#gold)" stroke-width="8"/>
-        <circle cx="200" cy="200" r="160" fill="none" stroke="#5dade2" stroke-width="2" stroke-dasharray="6,6"/>
-        <!-- Coroa -->
-        <path d="M150 95 L165 60 L200 80 L235 60 L250 95 Z" fill="url(#gold)" stroke="#fff" stroke-width="1.5"/>
-        <!-- Abebé / Espelho de Oxum -->
-        <circle cx="200" cy="175" r="55" fill="#d4e6f1" stroke="url(#gold)" stroke-width="8"/>
-        <!-- Ofá (Arco e Flecha) -->
-        <path d="M170 175 Q200 135 230 175" fill="none" stroke="#0f2942" stroke-width="4"/>
-        <line x1="200" y1="140" x2="200" y2="210" stroke="#0f2942" stroke-width="4"/>
-        <polygon points="200,132 193,145 207,145" fill="#0f2942"/>
-        <!-- Faixa Inferior -->
-        <path d="M55 275 Q200 315 345 275 L335 315 Q200 355 65 315 Z" fill="url(#gold)"/>
-        <text x="200" y="302" font-family="Georgia, serif" font-size="17" font-weight="bold" fill="#091d32" text-anchor="middle">Ilé Omo Adeolá Àṣẹ</text>
-        <text x="200" y="322" font-family="Georgia, serif" font-size="13" font-weight="bold" fill="#091d32" text-anchor="middle">Osun Agbara Injilé</text>
-        <text x="200" y="362" font-family="sans-serif" font-size="12" fill="#f7dc6f" text-anchor="middle">Fundado em 1991</text>
-      </svg>
-    `);
+    // LOGOTIPO OFICIAL PADRÃO (Convertido da imagem fornecida)
+    const DEFAULT_CREST = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QBaRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAExAAIAAAARAAAATgAAAAAAAABIAAAAAQAAAEgAAAABUGhvdG9zaG9wIDMgMiw0MDAA/+0AFlBob3Rvc2hvcCAzLjAAOEJJTQQEAAAAAAAPHAIAAAEA/+4ADkFkb2JlAGTAAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAgICAgICAgICAgICAgICAgEBAQEBAQECAQECAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC/8AAEQgAaABoAwERAAIRAQMhAf/EAK0AAAICAwEBAQAAAAAAAAAAAAcIBQQIAgMBCgEAAAMC AwEBAQAAAAAAAAAAAAMFBgQCBwAIChAAAgEDAwMDAgQDBAMHCQ8BAQIDBAUABgEGEiEHMRNB CFFiFCIycYEUI5GhUhWxCWEkJjNYctHwY4KSosIldOTUI7O01NYW8XWXt8IlNGRkhOTUxcXW19 hpcbLzKCYnRWR1tdXWF8KYuMHWxBUmRlZmZ4eXqKlJWWl5iZmpubnJ2foqOkpaanqKmqrK2urq 7v8QAHwEAAgIDAQEBAQEAAAAAAAAAAQIDBAUGBwgJCgsQ AAICAgEDAwIEAgYGBgEFAQUCAwQAEQUSIQMxBkEIEFEHEyIWUTJxgUJSkaEjM1JiBzNiFrHB UnKCo9EkRFWyY8Lw/9oADAMBAQIRAxEAPwD5b0mGk009Gk00mOk50000wOik0mOmGkk0wmO mmGmlMmGmmCmH//2Q==";
 
-    // ==========================================
-    // 2. ESTADO GLOBAL E PERSISTÊNCIA SINCRONIZADA
-    // ==========================================
-    const STORAGE_KEY = 'ile_ase_adeola_db_v2';
-
-    let appState = {
-      customCrest: DEFAULT_CREST_SVG,
+    let appData = {
+      crestUrl: DEFAULT_CREST,
       users: [
-        { id: 'u1', name: 'Babalorixá / Direção', email: 'admin@ilease.com', pass: '123456', role: 'admin' },
-        { id: 'u2', name: 'Tesouraria da Casa', email: 'tesouraria@ilease.com', pass: '123456', role: 'tesoureiro' },
-        { id: 'u3', name: 'Secretaria Geral', email: 'secretaria@ilease.com', pass: '123456', role: 'secretario' }
+        { email: 'admin@ilease.com', pass: '123456', name: 'Babalorixá Dirigente', role: 'admin' },
+        { email: 'tesouraria@ilease.com', pass: '123456', name: 'Tesoureiro Oficial', role: 'finance' },
+        { email: 'secretaria@ilease.com', pass: '123456', name: 'Secretário(a) Geral', role: 'secretary' }
       ],
-      members: [
-        {
-          id: 'm1',
-          name: 'Cristiano dos Santos Paes',
-          role: 'Ogã',
-          orixa: 'Oxóssi / Oxum',
-          doc: '000.000.000-00',
-          phone: '(13) 99999-0001',
-          joinDate: '2018-05-13',
-          monthlyFee: 80.00,
-          feeStatus: 'Em Dia',
-          works: 'Confirmação de Ogã; Obrigação de 7 anos concretizada.'
-        }
-      ],
-      finances: [
-        {
-          id: 'f1',
-          type: 'entrada',
-          category: 'Mensalidade',
-          memberName: 'Cristiano dos Santos Paes',
-          desc: 'Mensalidade Referência Atual',
-          amount: 80.00,
-          date: new Date().toISOString().split('T')[0]
-        }
-      ],
-      events: [
-        {
-          id: 'e1',
-          title: 'Louvação a Mamãe Oxum',
-          date: '2026-12-08',
-          time: '20:00',
-          desc: 'Gira festiva em homenagem a Oxum. Traje branco e fios de contas.'
-        }
-      ],
+      members: [],
+      finance: [],
+      events: [],
       gallery: []
     };
 
     let currentUser = null;
+    let dbFirestore = null;
+    let isCloudConnected = false;
 
-    function loadState() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          appState = { ...appState, ...parsed };
-        } catch (e) {
-          console.error('Erro ao carregar dados:', e);
+    window.addEventListener('DOMContentLoaded', () => {
+      carregarDadosLocais();
+      inicializarNuvemSeConfigurada();
+      atualizarImagensLogotipo();
+      document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        const pass = document.getElementById('loginPassword').value.trim();
+        const user = appData.users.find(u => u.email === email && u.pass === pass);
+        if (user) {
+          currentUser = user;
+          document.getElementById('loginModal').classList.add('hidden');
+          document.getElementById('appContainer').classList.remove('hidden');
+          atualizarInterfaceUsuario();
+        } else {
+          alert('E-mail ou senha incorretos.');
         }
-      }
-      applyCrestImages();
-    }
+      });
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      triggerSyncAnimation();
-      renderAll();
-    }
+      document.getElementById('memberForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        salvarIntegrante();
+      });
 
-    // Sincronização automática entre abas/janelas abertas no mesmo navegador
-    window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_KEY) {
-        loadState();
-        renderAll();
-      }
+      document.getElementById('financeForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        salvarFinanceiro();
+      });
+
+      document.getElementById('eventForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        salvarEvento();
+      });
     });
 
-    function triggerSyncAnimation() {
-      const text = document.getElementById('syncStatusText');
-      if (text) {
-        text.textContent = 'Atualizando...';
-        setTimeout(() => { text.textContent = 'Sincronizado'; }, 700);
-      }
-    }
-
-    function applyCrestImages() {
-      const src = appState.customCrest || DEFAULT_CREST_SVG;
-      ['loginCrestImg', 'sidebarCrestImg', 'bgWatermarkImg', 'dashCrestImg', 'posterCrestImg', 'modalFullCrestImg'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.src = src;
-      });
-    }
-
-    // ==========================================
-    // 3. UPLOAD MANUAL DE LOGOTIPO / BRASÃO
-    // ==========================================
-    function handleCrestUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          const maxSize = 500;
-          let w = img.width;
-          let h = img.height;
-          if (w > h && w > maxSize) { h *= maxSize / w; w = maxSize; }
-          else if (h > maxSize) { w *= maxSize / h; h = maxSize; }
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-
-          appState.customCrest = canvas.toDataURL('image/jpeg', 0.88);
-          saveState();
-          applyCrestImages();
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // ==========================================
-    // 4. AUTENTICAÇÃO E PERMISSÕES POR CARGO
-    // ==========================================
     function quickFillLogin(email, pass) {
       document.getElementById('loginEmail').value = email;
       document.getElementById('loginPassword').value = pass;
     }
-
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-      const pass = document.getElementById('loginPassword').value.trim();
-
-      const found = appState.users.find(u => u.email.toLowerCase() === email && u.pass === pass);
-      if (!found) {
-        alert('E-mail ou senha incorretos.');
-        return;
-      }
-
-      currentUser = found;
-      document.getElementById('loginModal').classList.add('hidden');
-      document.getElementById('appContainer').classList.remove('hidden');
-      applyRolePermissions();
-      renderAll();
-    });
 
     function logout() {
       currentUser = null;
@@ -790,161 +605,182 @@
       document.getElementById('loginModal').classList.remove('hidden');
     }
 
-    function applyRolePermissions() {
+    function atualizarInterfaceUsuario() {
       if (!currentUser) return;
-      document.getElementById('currentUserName').textContent = currentUser.name;
-      
-      const roleLabels = {
-        admin: 'Administrador / Direção',
-        tesoureiro: 'Tesoureiro(a)',
-        secretario: 'Secretário(a)',
-        consulta: 'Consulta'
-      };
-      document.getElementById('currentUserRoleBadge').textContent = roleLabels[currentUser.role] || currentUser.role;
+      document.getElementById('currentUserName').innerText = currentUser.name;
+      const roleBadge = document.getElementById('currentUserRoleBadge');
+      if (currentUser.role === 'admin') roleBadge.innerText = 'Direção Geral';
+      else if (currentUser.role === 'finance') roleBadge.innerText = 'Tesouraria';
+      else roleBadge.innerText = 'Secretaria';
 
-      const canEditMembers = ['admin', 'secretario'].includes(currentUser.role);
-      const canEditFinance = ['admin', 'tesoureiro'].includes(currentUser.role);
-      const canEditEvents = ['admin', 'secretario'].includes(currentUser.role);
-      const isAdmin = currentUser.role === 'admin';
-
-      document.getElementById('btnNewMember').style.display = canEditMembers ? 'flex' : 'none';
-      document.getElementById('btnNewFinance').style.display = canEditFinance ? 'flex' : 'none';
-      document.getElementById('btnNewEvent').style.display = canEditEvents ? 'flex' : 'none';
-      document.getElementById('btnManageUsers').style.display = isAdmin ? 'inline-block' : 'none';
-    }
-
-    // ==========================================
-    // 5. NAVEGAÇÃO ENTRE ABAS
-    // ==========================================
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab-content').forEach(sec => sec.classList.add('hidden'));
-      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        if (btn.dataset.tab === tabName) {
-          btn.className = 'nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-amber-500/20 text-amber-300 border border-amber-400/30';
-        } else {
-          btn.className = 'nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-sky-100/80 hover:bg-white/10 transition';
-        }
-      });
-    }
-
-    // ==========================================
-    // 6. RENDERIZAÇÃO GERAL
-    // ==========================================
-    function renderAll() {
-      document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('pt-BR', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      });
-
-      renderDashboard();
       renderMembers();
-      renderFinances();
+      renderFinance();
       renderEvents();
       renderGallery();
-      renderAccountsList();
+      atualizarDashboard();
+      atualizarSelectMembrosFinanceiro();
     }
 
-    function formatCurrency(val) {
-      return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabId).classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-amber-500/20', 'text-amber-300', 'border', 'border-amber-400/30'));
+      const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+      if (activeBtn) activeBtn.classList.add('bg-amber-500/20', 'text-amber-300', 'border', 'border-amber-400/30');
     }
 
-    function renderDashboard() {
-      document.getElementById('statTotalMembers').textContent = appState.members.length;
-
-      let income = 0;
-      let expense = 0;
-      appState.finances.forEach(f => {
-        if (f.type === 'entrada') income += Number(f.amount);
-        else expense += Number(f.amount);
+    function atualizarImagensLogotipo() {
+      const url = appData.crestUrl || DEFAULT_CREST;
+      ['loginCrestImg', 'sidebarCrestImg', 'dashCrestImg', 'bgWatermarkImg'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.src = url;
       });
+    }
 
-      document.getElementById('statTotalIncome').textContent = formatCurrency(income);
-      document.getElementById('statTotalExpense').textContent = formatCurrency(expense);
-      document.getElementById('statBalance').textContent = formatCurrency(income - expense);
+    function handleCrestUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        appData.crestUrl = e.target.result;
+        salvarDados();
+        atualizarImagensLogotipo();
+        alert('Logotipo atualizado com sucesso!');
+      };
+      reader.readAsDataURL(file);
+    }
 
-      const dashEvents = document.getElementById('dashEventsList');
-      if (appState.events.length === 0) {
-        dashEvents.innerHTML = `<p class="text-sm text-slate-500 italic">Nenhum evento agendado no momento.</p>`;
-      } else {
-        dashEvents.innerHTML = appState.events.slice(0, 3).map(ev => `
-          <div class="p-3.5 rounded-xl bg-white/70 border border-amber-200 flex items-center justify-between">
-            <div>
-              <h4 class="font-bold text-sm text-[#0f2942]">${ev.title}</h4>
-              <p class="text-xs text-slate-600">${ev.desc || ''}</p>
-            </div>
-            <span class="px-3 py-1 rounded-lg bg-amber-100 text-amber-900 text-xs font-bold shrink-0">
-              ${ev.date.split('-').reverse().join('/')} • ${ev.time}
-            </span>
-          </div>
-        `).join('');
+    function carregarDadosLocais() {
+      const salvo = localStorage.getItem('ILE_ASE_CORPORATIVO_V3');
+      if (salvo) {
+        try { appData = JSON.parse(salvo); } catch(e){}
       }
     }
 
-    // ==========================================
-    // 7. INTEGRANTES & EMISSÃO DE PDF / CARTEIRINHA
-    // ==========================================
+    function salvarDados() {
+      localStorage.setItem('ILE_ASE_CORPORATIVO_V3', JSON.stringify(appData));
+      if (isCloudConnected && dbFirestore) {
+        dbFirestore.collection('ile_ase').doc('dados_gerais').set({
+          payload: JSON.stringify(appData),
+          updatedAt: new Date().toISOString()
+        }).catch(err => console.error('Erro ao sincronizar nuvem:', err));
+      }
+      atualizarDashboard();
+    }
+
+    function inicializarNuvemSeConfigurada() {
+      const fbConfigStr = localStorage.getItem('ILE_FIREBASE_CONFIG');
+      if (!fbConfigStr) return;
+      document.getElementById('cfgFirebase').value = fbConfigStr;
+      try {
+        const cfg = JSON.parse(fbConfigStr);
+        if (!firebase.apps.length) firebase.initializeApp(cfg);
+        dbFirestore = firebase.firestore();
+        isCloudConnected = true;
+        document.getElementById('syncDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+        document.getElementById('syncStatusText').innerText = "Nuvem Sincronizada";
+
+        dbFirestore.collection('ile_ase').doc('dados_gerais').onSnapshot((doc) => {
+          if (doc.exists && doc.data().payload) {
+            appData = JSON.parse(doc.data().payload);
+            localStorage.setItem('ILE_ASE_CORPORATIVO_V3', JSON.stringify(appData));
+            atualizarImagensLogotipo();
+            if (currentUser) {
+              renderMembers();
+              renderFinance();
+              renderEvents();
+              renderGallery();
+              atualizarDashboard();
+            }
+          }
+        });
+      } catch(e) { console.warn('Firebase config error:', e); }
+    }
+
+    function openCloudConfigModal() { document.getElementById('cloudModal').classList.remove('hidden'); document.getElementById('cloudModal').classList.add('flex'); }
+    function salvarConexaoNuvem() {
+      const val = document.getElementById('cfgFirebase').value.trim();
+      if (!val) { localStorage.removeItem('ILE_FIREBASE_CONFIG'); location.reload(); return; }
+      try {
+        JSON.parse(val);
+        localStorage.setItem('ILE_FIREBASE_CONFIG', val);
+        alert('Configuração salva com sucesso! Reiniciando conexão...');
+        location.reload();
+      } catch(e) { alert('JSON inválido.'); }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // INTEGRANTES
+    function openMemberModal() {
+      document.getElementById('memberForm').reset();
+      document.getElementById('memberId').value = '';
+      document.getElementById('memberModalTitle').innerText = 'Novo Integrante';
+      openModal('memberModal');
+    }
+
+    function salvarIntegrante() {
+      const id = document.getElementById('memberId').value || Date.now().toString();
+      const novo = {
+        id,
+        name: document.getElementById('memberName').value,
+        role: document.getElementById('memberRole').value,
+        orixa: document.getElementById('memberOrixa').value,
+        doc: document.getElementById('memberDoc').value,
+        phone: document.getElementById('memberPhone').value,
+        joinDate: document.getElementById('memberJoinDate').value,
+        monthlyFee: parseFloat(document.getElementById('memberMonthlyFee').value) || 50,
+        feeStatus: document.getElementById('memberFeeStatus').value,
+        works: document.getElementById('memberWorks').value
+      };
+
+      const idx = appData.members.findIndex(m => m.id === id);
+      if (idx >= 0) appData.members[idx] = novo;
+      else appData.members.push(novo);
+
+      salvarDados();
+      closeModal('memberModal');
+      renderMembers();
+      atualizarSelectMembrosFinanceiro();
+    }
+
     function renderMembers() {
-      const search = (document.getElementById('memberSearchInput')?.value || '').toLowerCase();
+      const query = (document.getElementById('memberSearchInput').value || '').toLowerCase();
       const grid = document.getElementById('membersGrid');
-      const canEdit = currentUser && ['admin', 'secretario'].includes(currentUser.role);
+      const filtrados = appData.members.filter(m => m.name.toLowerCase().includes(query) || m.role.toLowerCase().includes(query) || (m.orixa && m.orixa.toLowerCase().includes(query)));
 
-      const filtered = appState.members.filter(m =>
-        m.name.toLowerCase().includes(search) ||
-        m.role.toLowerCase().includes(search) ||
-        (m.orixa || '').toLowerCase().includes(search)
-      );
-
-      if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full glass-card rounded-2xl p-8 text-center text-slate-500">Nenhum integrante encontrado.</div>`;
+      if (filtrados.length === 0) {
+        grid.innerHTML = `<div class="col-span-full glass-card p-6 text-center text-slate-500 italic">Nenhum integrante cadastrado. Clique em "Novo Integrante" para começar.</div>`;
         return;
       }
 
-      grid.innerHTML = filtered.map(m => `
-        <div class="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4">
+      grid.innerHTML = filtrados.map(m => `
+        <div class="glass-card rounded-2xl p-5 flex flex-col justify-between space-y-3">
           <div>
-            <div class="flex items-start justify-between gap-2">
+            <div class="flex justify-between items-start">
               <div>
-                <span class="inline-block px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[11px] font-bold uppercase">${m.role}</span>
-                <h3 class="text-lg font-bold text-[#0f2942] mt-1">${m.name}</h3>
-                <p class="text-xs text-slate-600"><i class="fa-solid fa-sparkles text-amber-600 mr-1"></i>Orixá: <strong>${m.orixa || 'Não informado'}</strong></p>
+                <h3 class="font-bold text-[#0f2942] text-base">${m.name}</h3>
+                <span class="inline-block text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded uppercase mt-0.5">${m.role}</span>
               </div>
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${m.feeStatus === 'Em Dia' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                ${m.feeStatus} (${formatCurrency(m.monthlyFee)})
-              </span>
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${m.feeStatus==='Em Dia'?'bg-emerald-100 text-emerald-800':m.feeStatus==='Isento'?'bg-sky-100 text-sky-800':'bg-rose-100 text-rose-800'}">${m.feeStatus}</span>
             </div>
-
-            <div class="mt-3 pt-3 border-t border-slate-200/80 text-xs text-slate-600 space-y-1">
-              <p><strong>Telefone:</strong> ${m.phone || '-'} | <strong>Entrada:</strong> ${m.joinDate ? m.joinDate.split('-').reverse().join('/') : '-'}</p>
-              <p class="bg-white/60 p-2 rounded-lg border border-slate-200/60 mt-1"><strong>Trabalhos/Obrigações:</strong> ${m.works || 'Sem registros.'}</p>
+            <div class="mt-3 text-xs text-slate-600 space-y-1">
+              <p><strong>Orixá:</strong> ${m.orixa || 'Não informado'}</p>
+              <p><strong>Telefone:</strong> ${m.phone || '---'}</p>
+              <p><strong>Mensalidade:</strong> R$ ${m.monthlyFee.toFixed(2)}</p>
             </div>
           </div>
-
-          <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200/80">
-            <button onclick="generateMemberCardPDF('${m.id}')" class="flex-1 py-2 px-3 rounded-xl navy-gradient text-amber-300 font-bold text-xs hover:opacity-95 transition flex items-center justify-center gap-1.5">
-              <i class="fa-solid fa-id-card"></i> Carteirinha PDF
-            </button>
-            <button onclick="generateMemberFichaPDF('${m.id}')" class="py-2 px-3 rounded-xl bg-amber-100 text-amber-900 font-bold text-xs hover:bg-amber-200 transition flex items-center justify-center gap-1.5">
-              <i class="fa-solid fa-file-pdf"></i> Ficha PDF
-            </button>
-            ${canEdit ? `
-              <button onclick="editMember('${m.id}')" class="p-2 rounded-xl bg-sky-100 text-sky-800 hover:bg-sky-200 text-xs" title="Editar"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="deleteMember('${m.id}')" class="p-2 rounded-xl bg-rose-100 text-rose-800 hover:bg-rose-200 text-xs" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-            ` : ''}
+          <div class="flex justify-end gap-2 pt-2 border-t border-slate-200">
+            <button onclick="editarIntegrante('${m.id}')" class="px-3 py-1.5 rounded-lg bg-sky-100 text-sky-800 font-semibold text-xs">Editar</button>
+            <button onclick="excluirIntegrante('${m.id}')" class="px-3 py-1.5 rounded-lg bg-rose-100 text-rose-800 font-semibold text-xs">Excluir</button>
           </div>
         </div>
       `).join('');
     }
 
-    function openMemberModal() {
-      document.getElementById('memberForm').reset();
-      document.getElementById('memberId').value = '';
-      document.getElementById('memberModalTitle').textContent = 'Novo Integrante';
-      openModal('memberModal');
-    }
-
-    function editMember(id) {
-      const m = appState.members.find(x => x.id === id);
+    function editarIntegrante(id) {
+      const m = appData.members.find(x => x.id === id);
       if (!m) return;
       document.getElementById('memberId').value = m.id;
       document.getElementById('memberName').value = m.name;
@@ -953,492 +789,185 @@
       document.getElementById('memberDoc').value = m.doc || '';
       document.getElementById('memberPhone').value = m.phone || '';
       document.getElementById('memberJoinDate').value = m.joinDate || '';
-      document.getElementById('memberMonthlyFee').value = m.monthlyFee || 0;
+      document.getElementById('memberMonthlyFee').value = m.monthlyFee || 50;
       document.getElementById('memberFeeStatus').value = m.feeStatus || 'Em Dia';
       document.getElementById('memberWorks').value = m.works || '';
-      document.getElementById('memberModalTitle').textContent = 'Editar Integrante';
+      document.getElementById('memberModalTitle').innerText = 'Editar Integrante';
       openModal('memberModal');
     }
 
-    function deleteMember(id) {
-      if (!confirm('Deseja realmente remover este integrante?')) return;
-      appState.members = appState.members.filter(m => m.id !== id);
-      saveState();
-    }
-
-    document.getElementById('memberForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const id = document.getElementById('memberId').value;
-      const memberData = {
-        id: id || 'm_' + Date.now(),
-        name: document.getElementById('memberName').value.trim(),
-        role: document.getElementById('memberRole').value,
-        orixa: document.getElementById('memberOrixa').value.trim(),
-        doc: document.getElementById('memberDoc').value.trim(),
-        phone: document.getElementById('memberPhone').value.trim(),
-        joinDate: document.getElementById('memberJoinDate').value,
-        monthlyFee: parseFloat(document.getElementById('memberMonthlyFee').value) || 0,
-        feeStatus: document.getElementById('memberFeeStatus').value,
-        works: document.getElementById('memberWorks').value.trim()
-      };
-
-      if (id) {
-        const idx = appState.members.findIndex(m => m.id === id);
-        if (idx > -1) appState.members[idx] = memberData;
-      } else {
-        appState.members.push(memberData);
+    function excluirIntegrante(id) {
+      if (confirm('Deseja realmente excluir este integrante?')) {
+        appData.members = appData.members.filter(m => m.id !== id);
+        salvarDados();
+        renderMembers();
+        atualizarSelectMembrosFinanceiro();
       }
-
-      closeModal('memberModal');
-      saveState();
-    });
-
-    // Gerar Carteirinha de Filiação em PDF (Frente e Verso)
-    async function generateMemberCardPDF(id) {
-      const m = appState.members.find(x => x.id === id);
-      if (!m) return;
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [90, 58] });
-      const emissionDate = new Date().toLocaleDateString('pt-BR');
-      const logoImg = appState.customCrest || DEFAULT_CREST_SVG;
-
-      // FRENTE DA CARTEIRINHA
-      doc.setFillColor(15, 41, 66); // Azul Marinho Sacro
-      doc.rect(0, 0, 90, 58, 'F');
-      doc.setDrawColor(200, 150, 30); // Borda Ouro
-      doc.setLineWidth(1.2);
-      doc.rect(2, 2, 86, 54);
-
-      try { doc.addImage(logoImg, 'PNG', 5, 6, 18, 18); } catch (e) {}
-
-      doc.setTextColor(243, 210, 122);
-      doc.setFont('times', 'bold');
-      doc.setFontSize(8.5);
-      doc.text('ILÉ ASÈ OMO ADEOLÁ', 26, 11);
-      doc.setFontSize(7);
-      doc.text('ASÈ OSUN AGBARA INJILÉ', 26, 15.5);
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6);
-      doc.text('CARTEIRA DE FILIAÇÃO RELIGIOSA', 26, 20);
-
-      // Dados do Filiado
-      doc.setFillColor(232, 244, 248);
-      doc.roundedRect(5, 27, 80, 25, 2, 2, 'F');
-
-      doc.setTextColor(15, 41, 66);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.text(m.name.toUpperCase(), 8, 33);
-
-      doc.setFontSize(7);
-      doc.setTextColor(160, 110, 10);
-      doc.text(`CARGO/TÍTULO: ${m.role.toUpperCase()}`, 8, 38);
-
-      doc.setTextColor(30, 41, 59);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.5);
-      doc.text(`Orixá: ${m.orixa || 'Não informado'}`, 8, 43);
-      doc.text(`Doc: ${m.doc || '---'}  |  Entrada: ${m.joinDate ? m.joinDate.split('-').reverse().join('/') : '---'}`, 8, 48);
-
-      // VERSO DA CARTEIRINHA
-      doc.addPage([90, 58], 'landscape');
-      doc.setFillColor(232, 244, 248);
-      doc.rect(0, 0, 90, 58, 'F');
-      doc.setDrawColor(200, 150, 30);
-      doc.setLineWidth(1);
-      doc.rect(2, 2, 86, 54);
-
-      doc.setTextColor(15, 41, 66);
-      doc.setFont('times', 'bold');
-      doc.setFontSize(8);
-      doc.text('TERMO DE FILIAÇÃO SACRA', 45, 9, { align: 'center' });
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6);
-      const termo = 'Certificamos que o portador desta cédula é membro regularmente inscrito no Ilé Asè Omo Adeolá Asè Osun Agbara Injilé (Fundado em 1991), amparado pela liberdade de crença e culto religioso.';
-      const splitTermo = doc.splitTextToSize(termo, 78);
-      doc.text(splitTermo, 6, 15);
-
-      doc.setFontSize(6.5);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Registro ID: ${m.id.toUpperCase()}`, 6, 32);
-      doc.text(`Emitido em: ${emissionDate}`, 6, 37);
-
-      doc.line(15, 48, 75, 48);
-      doc.setFontSize(6);
-      doc.text('Babalorixá / Direção da Casa', 45, 52, { align: 'center' });
-
-      doc.save(`Carteirinha_${m.name.replace(/\s+/g, '_')}.pdf`);
     }
 
-    // Gerar Ficha Completa em PDF com Logotipo e Data
-    async function generateMemberFichaPDF(id) {
-      const m = appState.members.find(x => x.id === id);
-      if (!m) return;
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const emissionDate = new Date().toLocaleDateString('pt-BR');
-      const logoImg = appState.customCrest || DEFAULT_CREST_SVG;
-
-      // Cabeçalho Oficial
-      doc.setFillColor(15, 41, 66);
-      doc.rect(0, 0, 210, 42, 'F');
-      try { doc.addImage(logoImg, 'PNG', 12, 6, 30, 30); } catch (e) {}
-
-      doc.setTextColor(243, 210, 122);
-      doc.setFont('times', 'bold');
-      doc.setFontSize(16);
-      doc.text('Ilé Asè Omo Adeolá Asè Osun Agbara Injilé', 48, 18);
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.text('Ficha Individual de Cadastro e Histórico Sacro', 48, 25);
-      doc.setFontSize(9);
-      doc.text(`Data de Emissão: ${emissionDate}`, 48, 32);
-
-      // Corpo da Ficha
-      doc.setTextColor(15, 41, 66);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text('1. DADOS PESSOAIS E SACROS', 14, 54);
-      doc.line(14, 56, 196, 56);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.text(`Nome Completo: ${m.name}`, 14, 65);
-      doc.text(`Cargo / Título: ${m.role}`, 14, 72);
-      doc.text(`Orixá de Cabeça: ${m.orixa || 'Não informado'}`, 14, 79);
-      doc.text(`Documento (CPF/RG): ${m.doc || 'Não informado'}`, 14, 86);
-      doc.text(`Telefone / WhatsApp: ${m.phone || 'Não informado'}`, 14, 93);
-      doc.text(`Data de Entrada / Feitura: ${m.joinDate ? m.joinDate.split('-').reverse().join('/') : 'Não informada'}`, 14, 100);
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text('2. SITUAÇÃO FINANCEIRA INDIVIDUAL', 14, 115);
-      doc.line(14, 117, 196, 117);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.text(`Valor da Mensalidade: ${formatCurrency(m.monthlyFee)}`, 14, 126);
-      doc.text(`Status Atual: ${m.feeStatus}`, 14, 133);
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text('3. TRABALHOS CONCRETIZADOS E OBRIGAÇÕES', 14, 148);
-      doc.line(14, 150, 196, 150);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      const worksLines = doc.splitTextToSize(m.works || 'Nenhum trabalho registrado até a presente data.', 180);
-      doc.text(worksLines, 14, 159);
-
-      // Assinaturas
-      doc.line(25, 255, 95, 255);
-      doc.text('Assinatura do Integrante', 60, 261, { align: 'center' });
-
-      doc.line(115, 255, 185, 255);
-      doc.text('Babalorixá / Direção da Casa', 150, 261, { align: 'center' });
-
-      doc.save(`Ficha_${m.name.replace(/\s+/g, '_')}.pdf`);
-    }
-
-    // ==========================================
-    // 8. FINANCEIRO & RECIBO PDF
-    // ==========================================
+    // FINANCEIRO
     function openFinanceModal() {
       document.getElementById('financeForm').reset();
-      document.getElementById('finDate').value = new Date().toISOString().split('T')[0];
-
-      const select = document.getElementById('finMember');
-      select.innerHTML = `<option value="">-- Geral da Casa --</option>` +
-        appState.members.map(m => `<option value="${m.name}">${m.name} (${m.role})</option>`).join('');
-
+      document.getElementById('finDate').value = new Date().toISOString().slice(0, 10);
       openModal('financeModal');
     }
 
-    document.getElementById('financeForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const item = {
-        id: 'f_' + Date.now(),
+    function atualizarSelectMembrosFinanceiro() {
+      const sel = document.getElementById('finMember');
+      if (!sel) return;
+      sel.innerHTML = `<option value="">-- Geral da Casa --</option>` + appData.members.map(m => `<option value="${m.name}">${m.name} (${m.role})</option>`).join('');
+    }
+
+    function salvarFinanceiro() {
+      const novo = {
+        id: Date.now().toString(),
         type: document.getElementById('finType').value,
         category: document.getElementById('finCategory').value,
-        memberName: document.getElementById('finMember').value || 'Geral da Casa',
-        desc: document.getElementById('finDesc').value.trim(),
+        member: document.getElementById('finMember').value,
+        desc: document.getElementById('finDesc').value,
         amount: parseFloat(document.getElementById('finAmount').value) || 0,
         date: document.getElementById('finDate').value
       };
-      appState.finances.unshift(item);
+      appData.finance.push(novo);
+      salvarDados();
       closeModal('financeModal');
-      saveState();
-    });
+      renderFinance();
+    }
 
-    function renderFinances() {
+    function renderFinance() {
       const tbody = document.getElementById('financeTableBody');
-      const canEdit = currentUser && ['admin', 'tesoureiro'].includes(currentUser.role);
-
-      if (appState.finances.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum lançamento financeiro registrado.</td></tr>`;
+      if (!tbody) return;
+      if (appData.finance.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 italic">Nenhum lançamento financeiro registrado.</td></tr>`;
         return;
       }
-
-      tbody.innerHTML = appState.finances.map(f => `
-        <tr class="hover:bg-white/60 transition">
-          <td class="p-4 whitespace-nowrap text-xs font-semibold">${f.date.split('-').reverse().join('/')}</td>
-          <td class="p-4 font-bold text-[#0f2942]">${f.desc}</td>
-          <td class="p-4 text-xs">${f.memberName}</td>
-          <td class="p-4"><span class="px-2 py-0.5 rounded-md bg-slate-200/80 text-slate-700 text-xs font-semibold">${f.category}</span></td>
-          <td class="p-4 font-extrabold ${f.type === 'entrada' ? 'text-emerald-700' : 'text-rose-700'}">
-            ${f.type === 'entrada' ? '+' : '-'} ${formatCurrency(f.amount)}
-          </td>
-          <td class="p-4 text-right space-x-1 whitespace-nowrap">
-            <button onclick="generateReceiptPDF('${f.id}')" class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold text-xs hover:bg-amber-200" title="Emitir Recibo PDF">
-              <i class="fa-solid fa-receipt"></i> Recibo PDF
-            </button>
-            ${canEdit ? `<button onclick="deleteFinance('${f.id}')" class="p-1.5 rounded-lg bg-rose-100 text-rose-800 hover:bg-rose-200 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
-          </td>
+      tbody.innerHTML = appData.finance.slice().reverse().map(f => `
+        <tr class="hover:bg-slate-50/50">
+          <td class="p-4 text-xs font-mono">${f.date.split('-').reverse().join('/')}</td>
+          <td class="p-4 font-semibold text-[#0f2942]">${f.desc}</td>
+          <td class="p-4 text-xs text-slate-600">${f.member || 'Geral'}</td>
+          <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">${f.category}</span></td>
+          <td class="p-4 font-extrabold ${f.type==='entrada'?'text-emerald-700':'text-rose-700'}">${f.type==='entrada'?'+':'-'} R$ ${f.amount.toFixed(2)}</td>
+          <td class="p-4 text-right"><button onclick="excluirFinanceiro('${f.id}')" class="text-rose-600 text-xs font-bold hover:underline">Excluir</button></td>
         </tr>
       `).join('');
     }
 
-    function deleteFinance(id) {
-      if (!confirm('Remover este lançamento financeiro?')) return;
-      appState.finances = appState.finances.filter(f => f.id !== id);
-      saveState();
+    function excluirFinanceiro(id) {
+      appData.finance = appData.finance.filter(f => f.id !== id);
+      salvarDados();
+      renderFinance();
     }
 
-    function generateReceiptPDF(id) {
-      const f = appState.finances.find(x => x.id === id);
-      if (!f) return;
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const emissionDate = new Date().toLocaleDateString('pt-BR');
-      const logoImg = appState.customCrest || DEFAULT_CREST_SVG;
-
-      doc.setDrawColor(200, 150, 30);
-      doc.setLineWidth(1);
-      doc.rect(12, 12, 186, 120);
-
-      try { doc.addImage(logoImg, 'PNG', 18, 18, 26, 26); } catch (e) {}
-
-      doc.setTextColor(15, 41, 66);
-      doc.setFont('times', 'bold');
-      doc.setFontSize(14);
-      doc.text('Ilé Asè Omo Adeolá Asè Osun Agbara Injilé', 50, 26);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.text('RECIBO DE CONTRIBUIÇÃO / TRABALHO SACRO', 50, 33);
-      doc.text(`Emitido em: ${emissionDate}`, 50, 40);
-
-      doc.setFontSize(11);
-      doc.text(`Recebemos/Registramos de: ${f.memberName}`, 18, 60);
-      doc.text(`Valor: ${formatCurrency(f.amount)}`, 18, 69);
-      doc.text(`Referente a: ${f.desc} (${f.category})`, 18, 78);
-      doc.text(`Data do Lançamento: ${f.date.split('-').reverse().join('/')}`, 18, 87);
-
-      doc.line(55, 114, 155, 114);
-      doc.setFontSize(9);
-      doc.text('Tesouraria / Direção - Ilé Asè Omo Adeolá', 105, 120, { align: 'center' });
-
-      doc.save(`Recibo_${f.id}.pdf`);
-    }
-
-    // ==========================================
-    // 9. AGENDA E GERADOR DE POST PARA REDES SOCIAIS
-    // ==========================================
+    // EVENTOS
     function openEventModal() {
       document.getElementById('eventForm').reset();
+      document.getElementById('evDate').value = new Date().toISOString().slice(0, 10);
       openModal('eventModal');
     }
 
-    document.getElementById('eventForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      appState.events.unshift({
-        id: 'e_' + Date.now(),
-        title: document.getElementById('evTitle').value.trim(),
+    function salvarEvento() {
+      const novo = {
+        id: Date.now().toString(),
+        title: document.getElementById('evTitle').value,
         date: document.getElementById('evDate').value,
         time: document.getElementById('evTime').value,
-        desc: document.getElementById('evDesc').value.trim()
-      });
+        desc: document.getElementById('evDesc').value
+      };
+      appData.events.push(novo);
+      salvarDados();
       closeModal('eventModal');
-      saveState();
-    });
+      renderEvents();
+    }
 
     function renderEvents() {
       const grid = document.getElementById('eventsGrid');
-      const canEdit = currentUser && ['admin', 'secretario'].includes(currentUser.role);
+      const dashList = document.getElementById('dashEventsList');
+      if (!grid) return;
 
-      if (appState.events.length === 0) {
-        grid.innerHTML = `<div class="col-span-full glass-card rounded-2xl p-8 text-center text-slate-500">Nenhum evento agendado.</div>`;
+      if (appData.events.length === 0) {
+        grid.innerHTML = `<div class="col-span-full glass-card p-6 text-center text-slate-500 italic">Nenhum evento agendado.</div>`;
+        if (dashList) dashList.innerHTML = `<p class="text-sm text-slate-500 italic">Nenhum evento agendado no momento.</p>`;
         return;
       }
 
-      grid.innerHTML = appState.events.map(ev => `
-        <div class="glass-card rounded-2xl p-5 flex flex-col justify-between gap-4">
+      grid.innerHTML = appData.events.map(ev => `
+        <div class="glass-card rounded-2xl p-5 flex flex-col justify-between space-y-3 border-l-4 border-l-amber-500">
           <div>
-            <div class="flex items-center justify-between text-xs font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-lg mb-3">
-              <span><i class="fa-regular fa-calendar mr-1"></i> ${ev.date.split('-').reverse().join('/')}</span>
-              <span><i class="fa-regular fa-clock mr-1"></i> ${ev.time}</span>
-            </div>
-            <h3 class="text-lg font-bold text-[#0f2942]">${ev.title}</h3>
-            <p class="text-xs text-slate-600 mt-2 leading-relaxed">${ev.desc || 'Sem observações adicionais.'}</p>
+            <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded uppercase">${ev.date.split('-').reverse().join('/')} às ${ev.time}</span>
+            <h3 class="font-bold text-[#0f2942] text-base mt-2">${ev.title}</h3>
+            <p class="text-xs text-slate-600 mt-1">${ev.desc || 'Sem observações.'}</p>
           </div>
-          <div class="flex items-center gap-2 pt-3 border-t border-slate-200/80">
-            <button onclick="openSocialPoster('${ev.id}')" class="flex-1 py-2 px-3 rounded-xl gold-gradient text-slate-950 font-extrabold text-xs hover:opacity-95 transition flex items-center justify-center gap-1.5">
-              <i class="fa-solid fa-share-nodes"></i> Gerar Arte Social
-            </button>
-            ${canEdit ? `<button onclick="deleteEvent('${ev.id}')" class="p-2 rounded-xl bg-rose-100 text-rose-800 hover:bg-rose-200 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
+          <div class="flex justify-end pt-2 border-t border-slate-200">
+            <button onclick="excluirEvento('${ev.id}')" class="text-rose-600 text-xs font-bold hover:underline">Excluir</button>
           </div>
         </div>
       `).join('');
+
+      if (dashList) {
+        dashList.innerHTML = appData.events.slice(0, 3).map(ev => `
+          <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-200 flex justify-between items-center text-xs">
+            <div><strong>${ev.title}</strong> — ${ev.date.split('-').reverse().join('/')} às ${ev.time}</div>
+          </div>
+        `).join('');
+      }
     }
 
-    function deleteEvent(id) {
-      if (!confirm('Remover este evento da agenda?')) return;
-      appState.events = appState.events.filter(e => e.id !== id);
-      saveState();
+    function excluirEvento(id) {
+      appData.events = appData.events.filter(e => e.id !== id);
+      salvarDados();
+      renderEvents();
     }
 
-    function openSocialPoster(id) {
-      const ev = appState.events.find(e => e.id === id);
-      if (!ev) return;
-      document.getElementById('posterTitle').textContent = ev.title;
-      document.getElementById('posterDesc').textContent = ev.desc || 'Venha participar conosco deste momento de fé e axé.';
-      document.getElementById('posterDateTime').textContent = `Dia ${ev.date.split('-').reverse().join('/')} às ${ev.time}h`;
-      openModal('socialCardModal');
-    }
-
-    async function downloadSocialPoster() {
-      const area = document.getElementById('socialPosterArea');
-      const canvas = await html2canvas(area, { scale: 2, useCORS: true });
-      const link = document.createElement('a');
-      link.download = 'Convite_Ile_Ase_Omo_Adeola.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }
-
-    // ==========================================
-    // 10. GALERIA DE FOTOS
-    // ==========================================
+    // GALERIA
     function handleGalleryUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          const max = 800;
-          let w = img.width, h = img.height;
-          if (w > h && w > max) { h *= max / w; w = max; }
-          else if (h > max) { w *= max / h; h = max; }
-          canvas.width = w;
-          canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-
-          appState.gallery.unshift({
-            id: 'g_' + Date.now(),
-            src: canvas.toDataURL('image/jpeg', 0.8),
-            date: new Date().toLocaleDateString('pt-BR')
-          });
-          saveState();
-        };
-        img.src = e.target.result;
+        appData.gallery.push({ id: Date.now().toString(), url: e.target.result });
+        salvarDados();
+        renderGallery();
       };
       reader.readAsDataURL(file);
     }
 
     function renderGallery() {
       const grid = document.getElementById('galleryGrid');
-      if (appState.gallery.length === 0) {
-        grid.innerHTML = `<div class="col-span-full glass-card rounded-2xl p-8 text-center text-slate-500">Nenhuma foto armazenada ainda. Clique em "Adicionar Foto" para começar o acervo.</div>`;
+      if (!grid) return;
+      if (appData.gallery.length === 0) {
+        grid.innerHTML = `<div class="col-span-full glass-card p-6 text-center text-slate-500 italic">Nenhuma foto no acervo.</div>`;
         return;
       }
-
-      grid.innerHTML = appState.gallery.map(item => `
-        <div class="glass-card rounded-2xl overflow-hidden group relative">
-          <img src="${item.src}" alt="Memória da Casa" class="w-full h-48 object-cover" />
-          <div class="p-2.5 flex items-center justify-between text-xs bg-white/90">
-            <span class="text-slate-600 font-medium">${item.date}</span>
-            <button onclick="deletePhoto('${item.id}')" class="text-rose-600 hover:text-rose-800"><i class="fa-solid fa-trash"></i></button>
+      grid.innerHTML = appData.gallery.map(g => `
+        <div class="relative group aspect-square rounded-2xl overflow-hidden glass-card shadow">
+          <img src="${g.url}" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+            <button onclick="excluirFoto('${g.id}')" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold text-xs">Excluir</button>
           </div>
         </div>
       `).join('');
     }
 
-    function deletePhoto(id) {
-      if (!confirm('Excluir esta foto do acervo?')) return;
-      appState.gallery = appState.gallery.filter(g => g.id !== id);
-      saveState();
+    function excluirFoto(id) {
+      appData.gallery = appData.gallery.filter(g => g.id !== id);
+      salvarDados();
+      renderGallery();
     }
 
-    // ==========================================
-    // 11. GERENCIAMENTO DE CONTAS DE ACESSO
-    // ==========================================
-    function openUsersModal() {
-      renderAccountsList();
-      openModal('usersModal');
-    }
-
-    document.getElementById('newUserForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      appState.users.push({
-        id: 'u_' + Date.now(),
-        name: document.getElementById('accName').value.trim(),
-        email: document.getElementById('accEmail').value.trim(),
-        pass: document.getElementById('accPass').value.trim(),
-        role: document.getElementById('accRole').value
+    function atualizarDashboard() {
+      const totalMembers = appData.members.length;
+      let income = 0, expense = 0;
+      appData.finance.forEach(f => {
+        if (f.type === 'entrada') income += f.amount;
+        else expense += f.amount;
       });
-      this.reset();
-      saveState();
-    });
 
-    function renderAccountsList() {
-      const list = document.getElementById('accountsList');
-      if (!list) return;
-      list.innerHTML = appState.users.map(u => `
-        <div class="flex items-center justify-between p-2.5 rounded-xl bg-white/80 border border-slate-200 text-xs">
-          <div>
-            <p class="font-bold text-[#0f2942]">${u.name} <span class="text-amber-700 uppercase">(${u.role})</span></p>
-            <p class="text-slate-500">${u.email}</p>
-          </div>
-          ${u.id !== 'u1' ? `<button onclick="deleteUser('${u.id}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-[10px] text-slate-400">Principal</span>'}
-        </div>
-      `).join('');
+      document.getElementById('statTotalMembers').innerText = totalMembers;
+      document.getElementById('statTotalIncome').innerText = 'R$ ' + income.toFixed(2);
+      document.getElementById('statTotalExpense').innerText = 'R$ ' + expense.toFixed(2);
+      document.getElementById('statBalance').innerText = 'R$ ' + (income - expense).toFixed(2);
     }
-
-    function deleteUser(id) {
-      appState.users = appState.users.filter(u => u.id !== id);
-      saveState();
-    }
-
-    // ==========================================
-    // 12. CONTROLE DE MODAIS E INICIALIZAÇÃO
-    // ==========================================
-    function openModal(id) {
-      const el = document.getElementById(id);
-      el.classList.remove('hidden');
-      el.classList.add('flex');
-    }
-
-    function closeModal(id) {
-      const el = document.getElementById(id);
-      el.classList.add('hidden');
-      el.classList.remove('flex');
-    }
-
-    function openCrestModal() {
-      openModal('crestModal');
-    }
-
-    // Inicialização
-    loadState();
   </script>
 </body>
 </html>
