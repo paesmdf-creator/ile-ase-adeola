@@ -2,972 +2,626 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0f2942" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Ilé Asè Omo Adeolá Asè Osun Agbara Injilé</title>
-
-  <!-- Tailwind CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ilê Asè Omo Adeolá — Gestão Institucional</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- jsPDF & html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-  <!-- Firebase SDK para Sincronização em Nuvem -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
-    :root {
-      --pearl-blue: #e8f4f8;
-      --pearl-accent: #d4ebf2;
-      --sacred-navy: #0f2942;
-      --oxum-gold: #c8961e;
-      --oxum-gold-light: #f3d27a;
-    }
-
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background: linear-gradient(135deg, #f2f9fc 0%, #e1f0f7 50%, #d3e8f2 100%);
-      background-attachment: fixed;
-      color: #102a43;
-      min-height: 100vh;
-    }
-
-    h1, h2, h3, .font-sacred {
-      font-family: 'Cinzel', serif;
-    }
-
-    .glass-card {
-      background: rgba(255, 255, 255, 0.88);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(200, 150, 30, 0.35);
-      box-shadow: 0 8px 32px rgba(15, 41, 66, 0.08);
-    }
-
-    .gold-gradient {
-      background: linear-gradient(135deg, #b8860b 0%, #daa520 50%, #f0c443 100%);
-    }
-
-    .navy-gradient {
-      background: linear-gradient(135deg, #091d32 0%, #143656 100%);
-    }
-
-    .crest-frame {
-      border: 3px solid #c8961e;
-      box-shadow: 0 4px 20px rgba(200, 150, 30, 0.28);
-    }
-
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+    .font-sacred { font-family: 'Cinzel', serif; }
+    .tab-active { background-color: #92400e; color: #ffffff; }
+    .gold-gradient { background: linear-gradient(135deg, #78350f 0%, #b45309 55%, #d97706 100%); }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #e1f0f7; }
-    ::-webkit-scrollbar-thumb { background: #c8961e; border-radius: 3px; }
-
-    @media print {
-      .no-print { display: none !important; }
-    }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
   </style>
 </head>
-<body class="antialiased selection:bg-amber-200 selection:text-slate-900">
+<body class="text-slate-800 antialiased">
 
-  <!-- Tela de Login / Seleção de Cargo -->
-  <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4">
-    <div class="glass-card w-full max-w-md rounded-2xl p-6 sm:p-8 text-center relative overflow-hidden">
-      <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden crest-frame bg-white flex items-center justify-center shadow-lg">
-        <img id="loginCrestImg" src="" alt="Brasão Ilé Asè" class="w-full h-full object-cover" />
+  <!-- TELA DE LOGIN -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-amber-950 via-stone-900 to-amber-900">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-amber-200/40">
+      <div class="gold-gradient p-7 text-center text-white relative">
+        <div class="w-24 h-24 mx-auto mb-3 rounded-full bg-white/95 p-1.5 shadow-lg flex items-center justify-center overflow-hidden border-2 border-amber-300">
+          <img id="loginLogoImg" src="" alt="Brasão Ilê Asè Omo Adeolá" class="w-full h-full object-contain rounded-full" />
+        </div>
+        <h1 class="font-sacred text-xl font-bold tracking-wide">Ilê Asè Omo Adeolá</h1>
+        <p class="text-amber-100 text-xs mt-1">Sistema de Gestão Administrativa, Secretaria e Tesouraria</p>
+        <div id="cloudStatusLogin" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-black/25 text-amber-100">
+          <span class="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span> Conectando à nuvem...
+        </div>
       </div>
-      <h1 class="text-xl sm:text-2xl font-bold text-[#0f2942] leading-tight">Ilé Asè Omo Adeolá</h1>
-      <p class="text-xs font-semibold tracking-widest text-amber-700 uppercase mt-1 mb-6">Asè Osun Agbara Injilé • Fundado em 1991</p>
 
-      <form id="loginForm" class="space-y-4 text-left">
+      <form id="loginForm" class="p-7 space-y-4">
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">E-mail de Acesso</label>
-          <input type="email" id="loginEmail" required placeholder="seuemail@ilease.com"
-            class="w-full px-4 py-2.5 rounded-xl border border-amber-300/60 bg-white/90 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Senha</label>
-          <input type="password" id="loginPassword" required placeholder="••••••••"
-            class="w-full px-4 py-2.5 rounded-xl border border-amber-300/60 bg-white/90 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm" />
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Palavra-Chave / Usuário de Acesso</label>
+          <div class="relative">
+            <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-amber-700 text-sm"></i>
+            <input type="text" id="loginUser" required autocomplete="off" placeholder="Ex: admin, tesoureiro, secretario"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none text-sm font-medium" />
+          </div>
         </div>
 
-        <button type="submit" class="w-full py-3 rounded-xl navy-gradient text-amber-300 font-bold tracking-wide shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-key"></i> Entrar no Sistema
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Senha de Acesso</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-amber-700 text-sm"></i>
+            <input type="password" id="loginPass" required placeholder="••••••••"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-amber-600 focus:ring-2 focus:ring-amber-200 outline-none text-sm" />
+          </div>
+        </div>
+
+        <div id="loginError" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium"></div>
+
+        <button type="submit" class="w-full py-3 rounded-xl gold-gradient text-white font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
         </button>
-      </form>
 
-      <div class="mt-5 pt-4 border-t border-slate-200/80 text-xs text-slate-500">
-        <p class="font-semibold text-slate-700 mb-1">Acesso Rápido por Cargo:</p>
-        <div class="flex flex-wrap justify-center gap-1.5">
-          <button type="button" onclick="quickFillLogin('admin@ilease.com', '123456')" class="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md font-medium hover:bg-amber-200">Direção / Admin</button>
-          <button type="button" onclick="quickFillLogin('tesouraria@ilease.com', '123456')" class="px-2.5 py-1 bg-sky-100 text-sky-900 rounded-md font-medium hover:bg-sky-200">Tesoureiro</button>
-          <button type="button" onclick="quickFillLogin('secretaria@ilease.com', '123456')" class="px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-md font-medium hover:bg-emerald-200">Secretário(a)</button>
+        <div class="pt-3 border-t border-slate-100 text-center">
+          <p class="text-[11px] text-slate-400">Acesso exclusivo para Administração Geral, Tesouraria e Secretaria.</p>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 
-  <!-- Layout Principal -->
-  <div id="appContainer" class="hidden min-h-screen flex flex-col lg:flex-row">
-    
-    <!-- Sidebar / Menu Lateral -->
-    <aside class="w-full lg:w-72 navy-gradient text-white flex flex-col justify-between shrink-0 shadow-2xl z-30">
+  <!-- APLICAÇÃO PRINCIPAL -->
+  <div id="appScreen" class="hidden min-h-screen flex flex-col lg:flex-row">
+    <!-- SIDEBAR -->
+    <aside class="w-full lg:w-72 bg-stone-900 text-stone-100 flex flex-col justify-between shrink-0">
       <div>
-        <div class="p-5 text-center border-b border-amber-500/20">
-          <div class="relative w-28 h-28 mx-auto rounded-2xl overflow-hidden crest-frame bg-white group cursor-pointer" onclick="openCrestModal()">
-            <img id="sidebarCrestImg" src="" alt="Logotipo Oficial" class="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-              <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-expand"></i> Ampliar</span>
+        <div class="p-5 border-b border-stone-800 flex items-center gap-3">
+          <button onclick="openLogoModal()" title="Ampliar ou trocar logotipo" class="w-14 h-14 rounded-full bg-white p-1 shrink-0 overflow-hidden border-2 border-amber-500 hover:scale-105 transition">
+            <img id="sidebarLogoImg" src="" alt="Logotipo" class="w-full h-full object-contain rounded-full" />
+          </button>
+          <div class="min-w-0">
+            <h2 class="font-sacred text-sm font-bold text-amber-400 leading-tight truncate">Ilê Asè Omo Adeolá</h2>
+            <p class="text-[11px] text-stone-400 truncate">Gestão Institucional</p>
+            <span id="syncBadge" class="mt-1 inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700/50">
+              <i class="fa-solid fa-cloud"></i> Sincronizado
+            </span>
+          </div>
+        </div>
+
+        <!-- PERFIL LOGADO -->
+        <div class="p-4 mx-3 mt-4 rounded-2xl bg-stone-800/80 border border-stone-700/70">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <p id="currentUserName" class="text-sm font-bold text-white truncate">Responsável</p>
+              <span id="currentUserRoleBadge" class="inline-block mt-0.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-600/30 text-amber-300 border border-amber-500/30">Cargo</span>
             </div>
-          </div>
-
-          <label for="crestUploadInput" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-xs font-semibold cursor-pointer transition">
-            <i class="fa-solid fa-camera"></i> Trocar Imagem Logotipo
-          </label>
-          <input type="file" id="crestUploadInput" accept="image/*" class="hidden" onchange="handleCrestUpload(event)" />
-
-          <h2 class="mt-3 text-base font-bold text-amber-300 leading-snug">Ilé Asè Omo Adeolá</h2>
-          <p class="text-[11px] text-sky-200/80 uppercase tracking-wider">Asè Osun Agbara Injilé</p>
-        </div>
-
-        <!-- Perfil Logado & Configuração de Nuvem -->
-        <div class="px-4 py-3 bg-white/5 border-b border-amber-500/20 flex items-center justify-between">
-          <div class="overflow-hidden">
-            <p id="currentUserName" class="text-xs font-bold text-white truncate">Usuário</p>
-            <span id="currentUserRoleBadge" class="inline-block text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-semibold uppercase mt-0.5">Cargo</span>
-          </div>
-          <div class="flex items-center gap-1">
-            <button onclick="openCloudConfigModal()" title="Configurar Sincronização em Nuvem (Firebase)" class="p-2 rounded-lg hover:bg-white/10 text-sky-300 transition">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-            </button>
-            <button onclick="logout()" title="Sair / Trocar Conta" class="p-2 rounded-lg hover:bg-red-500/20 text-red-300 transition">
-              <i class="fa-solid fa-right-from-bracket"></i>
+            <!-- BOTÃO EXCLUSIVO ADMIN GERAL -->
+            <button id="btnManageUsers" onclick="openUsersModal()" title="Gerenciar Acessos (Admin Geral)"
+              class="hidden w-9 h-9 rounded-xl bg-amber-600 hover:bg-amber-500 text-white flex items-center justify-center shadow transition shrink-0">
+              <i class="fa-solid fa-user-shield text-sm"></i>
             </button>
           </div>
         </div>
 
-        <!-- Navegação -->
-        <nav class="p-3 space-y-1.5">
-          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-amber-500/20 text-amber-300 border border-amber-400/30">
-            <i class="fa-solid fa-chart-pie w-5 text-center"></i> Painel Geral
+        <!-- NAVEGAÇÃO -->
+        <nav class="p-3 space-y-1 mt-2">
+          <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-btn tab-active w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition">
+            <i class="fa-solid fa-chart-pie w-5 text-center"></i> Visão Geral
           </button>
-          <button onclick="switchTab('members')" data-tab="members" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-sky-100/80 hover:bg-white/10 transition">
-            <i class="fa-solid fa-users w-5 text-center"></i> Integrantes & Carteirinhas
+          <button onclick="switchTab('members')" data-tab="members" id="navMembers" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-300 hover:bg-stone-800 transition">
+            <i class="fa-solid fa-users w-5 text-center"></i> Filhos da Casa & Carteirinhas
           </button>
-          <button onclick="switchTab('finance')" data-tab="finance" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-sky-100/80 hover:bg-white/10 transition">
-            <i class="fa-solid fa-coins w-5 text-center"></i> Controle Financeiro
+          <button onclick="switchTab('finance')" data-tab="finance" id="navFinance" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-300 hover:bg-stone-800 transition">
+            <i class="fa-solid fa-coins w-5 text-center"></i> Tesouraria & Recibos
           </button>
-          <button onclick="switchTab('events')" data-tab="events" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-sky-100/80 hover:bg-white/10 transition">
-            <i class="fa-solid fa-calendar-days w-5 text-center"></i> Agenda & Divulgação
+          <button onclick="switchTab('events')" data-tab="events" id="navEvents" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-300 hover:bg-stone-800 transition">
+            <i class="fa-solid fa-calendar-days w-5 text-center"></i> Giras & Informativos Sociais
           </button>
-          <button onclick="switchTab('gallery')" data-tab="gallery" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-sky-100/80 hover:bg-white/10 transition">
-            <i class="fa-solid fa-images w-5 text-center"></i> Acervo de Fotos
+          <button onclick="switchTab('gallery')" data-tab="gallery" id="navGallery" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-300 hover:bg-stone-800 transition">
+            <i class="fa-solid fa-images w-5 text-center"></i> Acervo Fotográfico
           </button>
         </nav>
       </div>
 
-      <!-- Status de Sincronização em Nuvem -->
-      <div class="p-4 border-t border-amber-500/20 text-xs flex items-center justify-between text-sky-200/80">
-        <span class="flex items-center gap-2">
-          <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-          <span id="syncStatusText">Modo Local</span>
-        </span>
-        <span class="text-[10px] text-amber-300/70">Nuvem Pronta</span>
+      <div class="p-4 border-t border-stone-800 space-y-2">
+        <button id="btnLogoConfig" onclick="openLogoModal()" class="w-full py-2 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-xs font-semibold text-amber-300 flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-image"></i> Brasão / Logotipo Oficial
+        </button>
+        <button onclick="logout()" class="w-full py-2.5 px-3 rounded-xl bg-red-950/70 hover:bg-red-900 text-xs font-semibold text-red-200 flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-right-from-bracket"></i> Sair do Sistema
+        </button>
       </div>
     </aside>
 
-    <!-- Conteúdo Principal -->
-    <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
-      
-      <!-- Marca d'água sutil de fundo -->
-      <div class="pointer-events-none fixed inset-0 flex items-center justify-center opacity-[0.05] z-0">
-        <img id="bgWatermarkImg" src="" alt="" class="w-[450px] h-[450px] object-contain rounded-full" />
-      </div>
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto max-h-screen">
 
-      <div class="relative z-10 max-w-6xl mx-auto space-y-6">
-
-        <!-- ABA 1: DASHBOARD -->
-        <section id="tab-dashboard" class="tab-content space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-bold text-[#0f2942]">Painel Administrativo</h1>
-              <p class="text-sm text-slate-600">Visão corporativa e simultânea do Ilé Asè Omo Adeolá</p>
-            </div>
-            <div class="text-right">
-              <span id="currentDateDisplay" class="inline-block px-4 py-2 rounded-xl glass-card text-xs font-bold text-[#0f2942]"></span>
-            </div>
+      <!-- ABA 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-section space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="font-sacred text-2xl font-bold text-stone-900">Painel Administrativo</h1>
+            <p class="text-sm text-slate-500">Acompanhamento integrado em tempo real — Ilê Asè Omo Adeolá</p>
           </div>
-
-          <!-- Cards de Resumo -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-amber-500">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase text-slate-500">Total de Integrantes</span>
-                <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fa-solid fa-users"></i></div>
-              </div>
-              <p id="statTotalMembers" class="text-2xl font-extrabold text-[#0f2942] mt-2">0</p>
-              <p class="text-xs text-slate-500 mt-1">Cadastros manuais ativos</p>
-            </div>
-
-            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase text-slate-500">Entradas / Mensalidades</span>
-                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-arrow-trend-up"></i></div>
-              </div>
-              <p id="statTotalIncome" class="text-2xl font-extrabold text-emerald-700 mt-2">R$ 0,00</p>
-              <p class="text-xs text-slate-500 mt-1">Tesouraria sincronizada</p>
-            </div>
-
-            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase text-slate-500">Saídas / Despesas</span>
-                <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center"><i class="fa-solid fa-arrow-trend-down"></i></div>
-              </div>
-              <p id="statTotalExpense" class="text-2xl font-extrabold text-rose-700 mt-2">R$ 0,00</p>
-              <p class="text-xs text-slate-500 mt-1">Manutenção e obrigações</p>
-            </div>
-
-            <div class="glass-card rounded-2xl p-5 border-l-4 border-l-sky-600">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold uppercase text-slate-500">Saldo em Caixa</span>
-                <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center"><i class="fa-solid fa-vault"></i></div>
-              </div>
-              <p id="statBalance" class="text-2xl font-extrabold text-[#0f2942] mt-2">R$ 0,00</p>
-              <p class="text-xs text-slate-500 mt-1">Disponível na casa</p>
-            </div>
-          </div>
-
-          <!-- Logotipo Oficial + Próximos Eventos -->
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="glass-card rounded-2xl p-6 flex flex-col items-center text-center">
-              <div class="w-44 h-44 rounded-2xl overflow-hidden crest-frame bg-white mb-4 shadow-md">
-                <img id="dashCrestImg" src="" alt="Brasão Oficial" class="w-full h-full object-cover" />
-              </div>
-              <h3 class="text-lg font-bold text-[#0f2942]">Ilé Asè Omo Adeolá</h3>
-              <p class="text-xs font-bold text-amber-700 uppercase">Asè Osun Agbara Injilé</p>
-              <p class="text-xs text-slate-600 mt-2">Fundado em 1991 • Gestão Corporativa Integrada.</p>
-            </div>
-
-            <div class="lg:col-span-2 glass-card rounded-2xl p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-[#0f2942]"><i class="fa-solid fa-calendar-check text-amber-600 mr-2"></i>Próximos Eventos & Giras</h3>
-                <button onclick="switchTab('events')" class="text-xs font-bold text-amber-700 hover:underline">Ver Agenda</button>
-              </div>
-              <div id="dashEventsList" class="space-y-3">
-                <p class="text-sm text-slate-500 italic">Nenhum evento agendado no momento.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ABA 2: INTEGRANTES E CARTEIRINHAS -->
-        <section id="tab-members" class="tab-content hidden space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 class="text-2xl font-bold text-[#0f2942]">Cadastro Manual de Integrantes</h1>
-              <p class="text-sm text-slate-600">Gerencie membros, cargos sacros e emita carteirinhas oficiais em PDF</p>
-            </div>
-            <button id="btnNewMember" onclick="openMemberModal()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start">
-              <i class="fa-solid fa-user-plus"></i> Novo Integrante
+          <div id="adminQuickBar" class="hidden">
+            <button onclick="openUsersModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center gap-2 hover:opacity-95">
+              <i class="fa-solid fa-user-gear"></i> Gerenciar Tesoureiro & Secretário
             </button>
           </div>
+        </div>
 
-          <div class="glass-card rounded-2xl p-4">
-            <div class="relative flex-1">
-              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
-              <input type="text" id="memberSearchInput" oninput="renderMembers()" placeholder="Buscar por nome, cargo ou Orixá..."
-                class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-slate-400">Integrantes Cadastrados</span>
+              <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center"><i class="fa-solid fa-users"></i></span>
             </div>
+            <p id="statMembers" class="text-2xl font-bold text-slate-900 mt-2">0</p>
           </div>
 
-          <div id="membersGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </section>
-
-        <!-- ABA 3: FINANCEIRO -->
-        <section id="tab-finance" class="tab-content hidden space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 class="text-2xl font-bold text-[#0f2942]">Controle Financeiro & Tesouraria</h1>
-              <p class="text-sm text-slate-600">Lançamentos em tempo real controlados pelo setor financeiro</p>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-slate-400">Saldo em Caixa</span>
+              <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center"><i class="fa-solid fa-wallet"></i></span>
             </div>
-            <button id="btnNewFinance" onclick="openFinanceModal()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start">
-              <i class="fa-solid fa-plus"></i> Novo Lançamento
-            </button>
+            <p id="statBalance" class="text-2xl font-bold text-emerald-700 mt-2">R$ 0,00</p>
           </div>
 
-          <div class="glass-card rounded-2xl overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="navy-gradient text-amber-300 text-xs uppercase">
-                    <th class="p-4">Data</th>
-                    <th class="p-4">Descrição</th>
-                    <th class="p-4">Integrante</th>
-                    <th class="p-4">Categoria</th>
-                    <th class="p-4">Valor</th>
-                    <th class="p-4 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="financeTableBody" class="divide-y divide-slate-200/70 text-sm"></tbody>
-              </table>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-slate-400">Próximas Giras / Eventos</span>
+              <span class="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center"><i class="fa-solid fa-drum"></i></span>
             </div>
-          </div>
-        </section>
-
-        <!-- ABA 4: AGENDA & REDES SOCIAIS -->
-        <section id="tab-events" class="tab-content hidden space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 class="text-2xl font-bold text-[#0f2942]">Agenda & Divulgação Social</h1>
-              <p class="text-sm text-slate-600">Giras, festas e convites visuais para WhatsApp e Instagram</p>
-            </div>
-            <button id="btnNewEvent" onclick="openEventModal()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start">
-              <i class="fa-solid fa-calendar-plus"></i> Agendar Evento
-            </button>
+            <p id="statEvents" class="text-2xl font-bold text-slate-900 mt-2">0</p>
           </div>
 
-          <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-        </section>
-
-        <!-- ABA 5: GALERIA DE FOTOS -->
-        <section id="tab-gallery" class="tab-content hidden space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 class="text-2xl font-bold text-[#0f2942]">Acervo Fotográfico da Casa</h1>
-              <p class="text-sm text-slate-600">Registro de celebrações e momentos especiais</p>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-slate-400">Registros no Acervo</span>
+              <span class="w-9 h-9 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center"><i class="fa-solid fa-camera"></i></span>
             </div>
-            <label class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm shadow-lg hover:opacity-95 transition flex items-center gap-2 self-start cursor-pointer">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Adicionar Foto
-              <input type="file" accept="image/*" class="hidden" onchange="handleGalleryUpload(event)" />
-            </label>
+            <p id="statPhotos" class="text-2xl font-bold text-slate-900 mt-2">0</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-calendar-check text-amber-700"></i> Próximas Atividades</h3>
+            <div id="dashEventsList" class="space-y-2.5 text-sm text-slate-500">Nenhuma gira ou evento agendado.</div>
           </div>
 
-          <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-        </section>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-receipt text-emerald-700"></i> Últimas Movimentações Financeiras</h3>
+            <div id="dashFinanceList" class="space-y-2.5 text-sm text-slate-500">Nenhuma movimentação registrada.</div>
+          </div>
+        </div>
+      </section>
 
-      </div>
+      <!-- ABA 2: INTEGRANTES & CARTEIRINHAS -->
+      <section id="tab-members" class="tab-section hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="font-sacred text-2xl font-bold text-stone-900">Filhos da Casa & Carteirinhas</h1>
+            <p class="text-sm text-slate-500">Cadastro manual de integrantes e emissão de carteirinha oficial em PDF.</p>
+          </div>
+          <button id="btnAddMember" onclick="openMemberModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center gap-2 hover:opacity-95">
+            <i class="fa-solid fa-user-plus"></i> Novo Integrante
+          </button>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-100">
+            <input type="text" id="memberSearch" oninput="renderMembers()" placeholder="Buscar por nome civil, nome de santo ou orixá..."
+              class="w-full md:w-96 px-4 py-2 rounded-xl border border-slate-300 text-sm outline-none focus:border-amber-600" />
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold">
+                <tr>
+                  <th class="px-5 py-3.5">Integrante</th>
+                  <th class="px-5 py-3.5">Orixá / Cargo</th>
+                  <th class="px-5 py-3.5">Iniciação / Contato</th>
+                  <th class="px-5 py-3.5 text-right">Ações & Carteirinha</th>
+                </tr>
+              </thead>
+              <tbody id="membersTableBody" class="divide-y divide-slate-100">
+                <tr><td colspan="4" class="px-5 py-8 text-center text-slate-400">Nenhum integrante cadastrado. Clique em "Novo Integrante" para iniciar.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 3: TESOURARIA & RECIBOS -->
+      <section id="tab-finance" class="tab-section hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="font-sacred text-2xl font-bold text-stone-900">Tesouraria & Emissão de Recibos</h1>
+            <p class="text-sm text-slate-500">Controle de mensalidades, doações, despesas e recibos timbrados em PDF.</p>
+          </div>
+          <button id="btnAddFinance" onclick="openFinanceModal()" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Novo Lançamento
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200">
+            <span class="text-xs font-bold text-slate-400 uppercase">Total Entradas</span>
+            <p id="finTotalIn" class="text-xl font-bold text-emerald-600 mt-1">R$ 0,00</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200">
+            <span class="text-xs font-bold text-slate-400 uppercase">Total Saídas</span>
+            <p id="finTotalOut" class="text-xl font-bold text-red-600 mt-1">R$ 0,00</p>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200">
+            <span class="text-xs font-bold text-slate-400 uppercase">Saldo Atual</span>
+            <p id="finTotalNet" class="text-xl font-bold text-slate-900 mt-1">R$ 0,00</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold">
+                <tr>
+                  <th class="px-5 py-3.5">Data</th>
+                  <th class="px-5 py-3.5">Descrição / Pagador</th>
+                  <th class="px-5 py-3.5">Tipo</th>
+                  <th class="px-5 py-3.5">Valor</th>
+                  <th class="px-5 py-3.5 text-right">Recibo PDF / Ações</th>
+                </tr>
+              </thead>
+              <tbody id="financeTableBody" class="divide-y divide-slate-100">
+                <tr><td colspan="5" class="px-5 py-8 text-center text-slate-400">Nenhum lançamento financeiro registrado.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 4: GIRAS & INFORMATIVOS SOCIAIS -->
+      <section id="tab-events" class="tab-section hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="font-sacred text-2xl font-bold text-stone-900">Giras & Informativos para Redes Sociais</h1>
+            <p class="text-sm text-slate-500">Agende eventos e gere artes oficiais com o brasão da casa para WhatsApp e Instagram.</p>
+          </div>
+          <button id="btnAddEvent" onclick="openEventModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center gap-2">
+            <i class="fa-solid fa-calendar-plus"></i> Novo Evento / Informativo
+          </button>
+        </div>
+
+        <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div class="col-span-full bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">
+            Nenhum evento cadastrado. Clique em "Novo Evento / Informativo" para criar e gerar o card de divulgação.
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 5: ACERVO FOTOGRÁFICO -->
+      <section id="tab-gallery" class="tab-section hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="font-sacred text-2xl font-bold text-stone-900">Acervo Fotográfico</h1>
+            <p class="text-sm text-slate-500">Memória visual das festividades e obrigações do Ilê Asè Omo Adeolá.</p>
+          </div>
+          <button id="btnAddPhoto" onclick="openPhotoModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Adicionar Foto
+          </button>
+        </div>
+
+        <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="col-span-full bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">
+            Nenhuma foto adicionada ao acervo ainda.
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
-  <!-- MODAL: CADASTRO DE INTEGRANTE -->
-  <div id="memberModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
-    <div class="glass-card w-full max-w-2xl rounded-2xl p-6 my-8">
-      <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-        <h3 id="memberModalTitle" class="text-lg font-bold text-[#0f2942]">Cadastro de Integrante</h3>
-        <button onclick="closeModal('memberModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+  <!-- MODAL: GERENCIAMENTO DE CONTAS (EXCLUSIVO ADMIN GERAL) -->
+  <div id="usersModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="gold-gradient p-5 text-white flex items-center justify-between">
+        <div>
+          <h3 class="font-sacred text-lg font-bold">Gestão de Cargos e Acessos</h3>
+          <p class="text-xs text-amber-100">Exclusivo Administração Geral — Crie ou substitua Tesoureiro e Secretário(a)</p>
+        </div>
+        <button onclick="closeModal('usersModal')" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <form id="memberForm" class="space-y-4">
+      <div class="p-6 overflow-y-auto space-y-6">
+        <form id="userAccountForm" class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-3">
+          <input type="hidden" id="editUserId" />
+          <h4 id="userFormTitle" class="text-xs font-bold uppercase tracking-wider text-amber-900">Cadastrar / Atualizar Acesso</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Função / Cargo</label>
+              <select id="accRole" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+                <option value="tesoureiro">Tesoureiro(a)</option>
+                <option value="secretario">Secretário(a)</option>
+                <option value="admin">Administração Geral</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Nome do Responsável</label>
+              <input type="text" id="accName" required placeholder="Nome completo do responsável" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Palavra-Chave de Login (sem e-mail)</label>
+              <input type="text" id="accUsername" required placeholder="Ex: tesoureiro_ase" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Senha de Acesso</label>
+              <input type="text" id="accPassword" required placeholder="Defina a senha" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-1">
+            <button type="button" onclick="resetUserForm()" class="px-3 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold">Limpar</button>
+            <button type="submit" class="px-4 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Salvar Credencial na Nuvem</button>
+          </div>
+        </form>
+
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Acessos Ativos no Sistema</h4>
+          <div id="usersListContainer" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: INTEGRANTE -->
+  <div id="memberModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+      <div class="gold-gradient p-5 text-white flex items-center justify-between">
+        <h3 id="memberModalTitle" class="font-sacred text-lg font-bold">Cadastro de Integrante</h3>
+        <button onclick="closeModal('memberModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="memberForm" class="p-6 space-y-3 max-h-[80vh] overflow-y-auto">
         <input type="hidden" id="memberId" />
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Nome Civil Completo *</label>
+          <input type="text" id="mCivilName" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nome Completo *</label>
-            <input type="text" id="memberName" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
+            <label class="block text-xs font-bold text-slate-600 mb-1">Nome de Santo / Dijina</label>
+            <input type="text" id="mSacredName" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Cargo / Título na Casa *</label>
-            <select id="memberRole" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm">
-              <option value="Babalorixá">Babalorixá</option>
-              <option value="Iyalorixá">Iyalorixá</option>
-              <option value="Pai Pequeno / Babakekerê">Pai Pequeno / Babakekerê</option>
-              <option value="Mãe Pequena / Iyakekerê">Mãe Pequena / Iyakekerê</option>
-              <option value="Ogã">Ogã</option>
-              <option value="Ekedji">Ekedji</option>
-              <option value="Yaô / Filho(a) de Santo">Yaô / Filho(a) de Santo</option>
-              <option value="Abiã">Abiã</option>
-              <option value="Consulente / Colaborador">Consulente / Colaborador</option>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Orixá Principal *</label>
+            <input type="text" id="mOrixa" required placeholder="Ex: Oxóssi, Oxum, Xangô..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Cargo / Hierarquia</label>
+            <input type="text" id="mRole" placeholder="Ex: Abiã, Yaô, Egbomi, Ogã, Ekedi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Data de Iniciação / Entrada</label>
+            <input type="date" id="mInitDate" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">CPF / Documento</label>
+            <input type="text" id="mDoc" placeholder="000.000.000-00" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Telefone / WhatsApp</label>
+            <input type="text" id="mPhone" placeholder="(13) 99999-9999" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Foto 3x4 do Integrante (opcional)</label>
+          <input type="file" id="mPhotoInput" accept="image/*" class="w-full text-xs text-slate-500" />
+        </div>
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('memberModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Salvar Cadastro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: FINANCEIRO -->
+  <div id="financeModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+      <div class="bg-emerald-800 p-5 text-white flex items-center justify-between">
+        <h3 class="font-sacred text-lg font-bold">Lançamento Financeiro</h3>
+        <button onclick="closeModal('financeModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="financeForm" class="p-6 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Tipo *</label>
+            <select id="fType" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+              <option value="entrada">Entrada (+)</option>
+              <option value="saida">Saída (-)</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Orixá de Cabeça</label>
-            <input type="text" id="memberOrixa" placeholder="Ex: Oxum, Oxóssi, Ogum..." class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">CPF / Documento</label>
-            <input type="text" id="memberDoc" placeholder="000.000.000-00" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Telefone / WhatsApp</label>
-            <input type="text" id="memberPhone" placeholder="(13) 99999-9999" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Data de Entrada / Feitura</label>
-            <input type="date" id="memberJoinDate" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Valor Mensalidade (R$)</label>
-            <input type="number" step="0.01" id="memberMonthlyFee" value="50.00" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Status Mensalidade Atual</label>
-            <select id="memberFeeStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm">
-              <option value="Em Dia">Em Dia</option>
-              <option value="Pendente">Pendente</option>
-              <option value="Isento">Isento</option>
-            </select>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Data *</label>
+            <input type="date" id="fDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
           </div>
         </div>
-
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Histórico de Trabalhos e Obrigações</label>
-          <textarea id="memberWorks" rows="3" placeholder="Descreva obrigações, ebós, assentamentos..." class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm"></textarea>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Nome do Pagador / Recebedor *</label>
+          <input type="text" id="fPerson" required placeholder="Nome completo" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
         </div>
-
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
-          <button type="button" onclick="closeModal('memberModal')" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold text-sm">Cancelar</button>
-          <button type="submit" class="px-5 py-2 rounded-xl navy-gradient text-amber-300 font-bold text-sm">Salvar Integrante</button>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Referente a (Descrição) *</label>
+          <input type="text" id="fDesc" required placeholder="Ex: Mensalidade, Doação para festa, Compra de insumos" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Valor (R$) *</label>
+          <input type="number" step="0.01" min="0.01" id="fAmount" required placeholder="0.00" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+        </div>
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('financeModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold shadow">Registrar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: LANÇAMENTO FINANCEIRO -->
-  <div id="financeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div class="glass-card w-full max-w-md rounded-2xl p-6">
-      <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-        <h3 class="text-lg font-bold text-[#0f2942]">Lançamento Financeiro</h3>
-        <button onclick="closeModal('financeModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+  <!-- MODAL: EVENTO & INFORMATIVO -->
+  <div id="eventModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+      <div class="gold-gradient p-5 text-white flex items-center justify-between">
+        <h3 class="font-sacred text-lg font-bold">Novo Evento / Informativo</h3>
+        <button onclick="closeModal('eventModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form id="financeForm" class="space-y-4">
+      <form id="eventForm" class="p-6 space-y-3">
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tipo</label>
-          <select id="finType" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm">
-            <option value="entrada">Entrada (+)</option>
-            <option value="saida">Saída / Despesa (-)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Categoria</label>
-          <select id="finCategory" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm">
-            <option value="Mensalidade">Mensalidade</option>
-            <option value="Trabalho Concretizado">Trabalho Concretizado</option>
-            <option value="Doação / Axé">Doação / Axé</option>
-            <option value="Material Ritualístico">Material Ritualístico</option>
-            <option value="Manutenção da Casa">Manutenção da Casa</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Integrante Vinculado (Opcional)</label>
-          <select id="finMember" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm">
-            <option value="">-- Geral da Casa --</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Descrição *</label>
-          <input type="text" id="finDesc" required placeholder="Ex: Mensalidade" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
+          <label class="block text-xs font-bold text-slate-600 mb-1">Título da Gira / Festividade *</label>
+          <input type="text" id="eTitle" required placeholder="Ex: Gira de Caboclos / Festa de Oxóssi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Valor (R$) *</label>
-            <input type="number" step="0.01" id="finAmount" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
+            <label class="block text-xs font-bold text-slate-600 mb-1">Data *</label>
+            <input type="date" id="eDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Data *</label>
-            <input type="date" id="finDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
+            <label class="block text-xs font-bold text-slate-600 mb-1">Horário *</label>
+            <input type="time" id="eTime" required value="20:00" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
           </div>
         </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
-          <button type="button" onclick="closeModal('financeModal')" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold text-sm">Cancelar</button>
-          <button type="submit" class="px-5 py-2 rounded-xl navy-gradient text-amber-300 font-bold text-sm">Registrar</button>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Local / Endereço</label>
+          <input type="text" id="eLocation" value="Ilê Asè Omo Adeolá — Itanhaém/SP" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Mensagem / Orientações para o Informativo</label>
+          <textarea id="eNotes" rows="3" placeholder="Ex: Traje branco. Todos são bem-vindos com axé!" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"></textarea>
+        </div>
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('eventModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Salvar Evento</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: AGENDAR EVENTO -->
-  <div id="eventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div class="glass-card w-full max-w-md rounded-2xl p-6">
-      <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-        <h3 class="text-lg font-bold text-[#0f2942]">Agendar Evento / Gira</h3>
-        <button onclick="closeModal('eventModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+  <!-- MODAL: GALERIA -->
+  <div id="photoModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+      <div class="gold-gradient p-5 text-white flex items-center justify-between">
+        <h3 class="font-sacred text-lg font-bold">Adicionar Foto ao Acervo</h3>
+        <button onclick="closeModal('photoModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form id="eventForm" class="space-y-4">
+      <form id="photoForm" class="p-6 space-y-3">
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Título do Evento *</label>
-          <input type="text" id="evTitle" required placeholder="Ex: Festa de Oxum" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Data *</label>
-            <input type="date" id="evDate" required class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Horário *</label>
-            <input type="time" id="evTime" required value="20:00" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm" />
-          </div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Legenda / Título *</label>
+          <input type="text" id="pCaption" required placeholder="Ex: Saída de Yaô — Novembro 2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
         </div>
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Orientações / Traje</label>
-          <textarea id="evDesc" rows="3" placeholder="Ex: Traje branco..." class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm"></textarea>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Selecionar Imagem *</label>
+          <input type="file" id="pFile" accept="image/*" required class="w-full text-xs text-slate-500" />
         </div>
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
-          <button type="button" onclick="closeModal('eventModal')" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold text-sm">Cancelar</button>
-          <button type="submit" class="px-5 py-2 rounded-xl navy-gradient text-amber-300 font-bold text-sm">Salvar Evento</button>
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('photoModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Publicar no Acervo</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: CONFIGURAÇÃO DE NUVEM (FIREBASE) -->
-  <div id="cloudModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div class="glass-card w-full max-w-lg rounded-2xl p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-        <h3 class="text-lg font-bold text-[#0f2942]">Sincronização em Nuvem (Ilé Asè)</h3>
-        <button onclick="closeModal('cloudModal')" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+  <!-- MODAL: LOGOTIPO OFICIAL -->
+  <div id="logoModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden text-center">
+      <div class="gold-gradient p-4 text-white flex items-center justify-between">
+        <h3 class="font-sacred text-base font-bold">Brasão Oficial — Ilê Asè Omo Adeolá</h3>
+        <button onclick="closeModal('logoModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <p class="text-xs text-slate-600 leading-relaxed">
-        Cole abaixo o objeto de configuração do seu projeto no Firebase para que os responsáveis (Tesouraria, Secretaria e Direção) atualizem dados simultaneamente em tempo real:
-      </p>
-      <div>
-        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Chave de Conexão Firebase (JSON):</label>
-        <textarea id="cfgFirebase" rows="5" placeholder='{"apiKey": "...", "projectId": "..."}' class="w-full border p-2 rounded font-mono text-[11px] bg-slate-50"></textarea>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="salvarConexaoNuvem()" class="px-5 py-2.5 rounded-xl navy-gradient text-amber-300 font-bold text-sm">Conectar Nuvem Agora</button>
+      <div class="p-6 space-y-4">
+        <div class="w-48 h-48 mx-auto rounded-full border-4 border-amber-500 p-2 bg-amber-50 shadow-inner flex items-center justify-center overflow-hidden">
+          <img id="modalLogoPreview" src="" alt="Brasão" class="w-full h-full object-contain rounded-full" />
+        </div>
+        <div id="logoUploadSection" class="space-y-2">
+          <label class="block text-xs font-bold text-slate-600">Atualizar Imagem do Brasão (salva para todos os aparelhos)</label>
+          <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)" class="w-full text-xs text-slate-500" />
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    // LOGOTIPO OFICIAL PADRÃO (Convertido da imagem fornecida)
-    const DEFAULT_CREST = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QBaRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAAExAAIAAAARAAAATgAAAAAAAABIAAAAAQAAAEgAAAABUGhvdG9zaG9wIDMgMiw0MDAA/+0AFlBob3Rvc2hvcCAzLjAAOEJJTQQEAAAAAAAPHAIAAAEA/+4ADkFkb2JlAGTAAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAgICAgICAgICAgICAgICAgEBAQEBAQECAQECAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC/8AAEQgAaABoAwERAAIRAQMhAf/EAK0AAAICAwEBAQAAAAAAAAAAAAcIBQQIAgMBCgEAAAMC AwEBAQAAAAAAAAAAAAMFBgQCBwAIChAAAgEDAwMDAgQDBAMHCQ8BAQIDBAUABgEGEiEHMRNB CFFiFCIycYEUI5GhUhWxCWEkJjNYctHwY4KSosIldOTUI7O01NYW8XWXt8IlNGRkhOTUxcXW19 hpcbLzKCYnRWR1tdXWF8KYuMHWxBUmRlZmZ4eXqKlJWWl5iZmpubnJ2foqOkpaanqKmqrK2urq 7v8QAHwEAAgIDAQEBAQEAAAAAAAAAAQIDBAUGBwgJCgsQ AAICAgEDAwIEAgYGBgEFAQUCAwQAEQUSIQMxBkEIEFEHEyIWUTJxgUJSkaEjM1JiBzNiFrHB UnKCo9EkRFWyY8Lw/9oADAMBAQIRAxEAPwD5b0mGk009Gk00mOk50000wOik0mOmGkk0wmO mmGmlMmGmmCmH//2Q==";
+  <!-- ÁREA OCULTA PARA RENDERIZAÇÃO DO INFORMATIVO DE REDES SOCIAIS (PNG) -->
+  <div id="socialCardRenderZone" class="fixed -left-[9999px] top-0">
+    <div id="socialFlyer" class="w-[600px] h-[750px] bg-gradient-to-b from-amber-950 via-stone-900 to-amber-950 text-white p-10 flex flex-col justify-between border-[10px] border-amber-500 relative overflow-hidden">
+      <div class="text-center z-10">
+        <div class="w-28 h-28 mx-auto rounded-full bg-white p-1.5 border-4 border-amber-400 shadow-xl overflow-hidden">
+          <img id="flyerLogoImg" src="" class="w-full h-full object-contain rounded-full" />
+        </div>
+        <p class="text-amber-300 text-xs font-bold uppercase tracking-[0.25em] mt-4">Convite Oficial</p>
+        <h2 class="font-sacred text-2xl font-bold text-white mt-1">Ilê Asè Omo Adeolá</h2>
+      </div>
 
-    let appData = {
-      crestUrl: DEFAULT_CREST,
-      users: [
-        { email: 'admin@ilease.com', pass: '123456', name: 'Babalorixá Dirigente', role: 'admin' },
-        { email: 'tesouraria@ilease.com', pass: '123456', name: 'Tesoureiro Oficial', role: 'finance' },
-        { email: 'secretaria@ilease.com', pass: '123456', name: 'Secretário(a) Geral', role: 'secretary' }
-      ],
+      <div class="my-auto bg-white/10 backdrop-blur-sm border border-amber-400/40 rounded-3xl p-7 text-center z-10 space-y-4">
+        <h1 id="flyerTitle" class="font-sacred text-3xl font-bold text-amber-300 leading-tight">Gira Festiva</h1>
+        <div class="inline-block px-5 py-2 rounded-full bg-amber-500 text-stone-950 font-bold text-base">
+          <span id="flyerDateTime">Data e Horário</span>
+        </div>
+        <p id="flyerNotes" class="text-stone-100 text-base leading-relaxed">Todos são bem-vindos com axé e respeito.</p>
+      </div>
+
+      <div class="text-center z-10 border-t border-amber-500/30 pt-4">
+        <p id="flyerLocation" class="text-sm font-semibold text-amber-200">Ilê Asè Omo Adeolá — Itanhaém/SP</p>
+        <p class="text-[11px] text-stone-400 mt-1">Axé para todos os irmãos e visitantes</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIREBASE SDK E LÓGICA COMPLETA -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // CONFIGURAÇÃO DO PROJETO ile-ase-gestao EMBUTIDA
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYETV_jJBKNTu-zi0IHiyBer05J-aRSoc",
+      authDomain: "ile-ase-gestao.firebaseapp.com",
+      projectId: "ile-ase-gestao",
+      storageBucket: "ile-ase-gestao.firebasestorage.app",
+      messagingSenderId: "91463307801",
+      appId: "1:91463307801:web:ce32102e39030ec0e75088",
+      measurementId: "G-DW9PPER98E"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // LOGOTIPO PADRÃO VETORIAL EMBUTIDO (caso ainda não tenha sido substituído por foto na nuvem)
+    const DEFAULT_LOGO_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="95" fill="#78350f" stroke="#f59e0b" stroke-width="6"/>
+        <circle cx="100" cy="100" r="80" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
+        <path d="M100 35 L115 80 L160 80 L123 108 L137 152 L100 125 L63 152 L77 108 L40 80 L85 80 Z" fill="#b45309" opacity="0.2"/>
+        <text x="100" y="92" font-family="Georgia, serif" font-size="18" font-weight="bold" fill="#78350f" text-anchor="middle">ILÊ ASÈ</text>
+        <text x="100" y="116" font-family="Georgia, serif" font-size="15" font-weight="bold" fill="#b45309" text-anchor="middle">OMO ADEOLÁ</text>
+        <text x="100" y="142" font-family="sans-serif" font-size="10" font-weight="bold" fill="#92400e" text-anchor="middle">AXÉ • FÉ • TRADIÇÃO</text>
+      </svg>
+    `);
+
+    // ESTADO GLOBAL
+    let state = {
+      currentUser: null,
+      logoDataUrl: DEFAULT_LOGO_SVG,
+      users: [],
       members: [],
       finance: [],
       events: [],
       gallery: []
     };
 
-    let currentUser = null;
-    let dbFirestore = null;
-    let isCloudConnected = false;
+    // CONTA MESTRA INICIAL PARA O PRIMEIRO ACESSO DO ADMIN GERAL
+    const DEFAULT_ADMIN = {
+      id: "admin_master",
+      role: "admin",
+      name: "Administração Geral",
+      username: "admin",
+      password: "123"
+    };
 
-    window.addEventListener('DOMContentLoaded', () => {
-      carregarDadosLocais();
-      inicializarNuvemSeConfigurada();
-      atualizarImagensLogotipo();
-      document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-      document.getElementById('loginForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('loginEmail').value.trim();
-        const pass = document.getElementById('loginPassword').value.trim();
-        const user = appData.users.find(u => u.email === email && u.pass === pass);
-        if (user) {
-          currentUser = user;
-          document.getElementById('loginModal').classList.add('hidden');
-          document.getElementById('appContainer').classList.remove('hidden');
-          atualizarInterfaceUsuario();
-        } else {
-          alert('E-mail ou senha incorretos.');
-        }
-      });
-
-      document.getElementById('memberForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        salvarIntegrante();
-      });
-
-      document.getElementById('financeForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        salvarFinanceiro();
-      });
-
-      document.getElementById('eventForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        salvarEvento();
-      });
-    });
-
-    function quickFillLogin(email, pass) {
-      document.getElementById('loginEmail').value = email;
-      document.getElementById('loginPassword').value = pass;
-    }
-
-    function logout() {
-      currentUser = null;
-      document.getElementById('appContainer').classList.add('hidden');
-      document.getElementById('loginModal').classList.remove('hidden');
-    }
-
-    function atualizarInterfaceUsuario() {
-      if (!currentUser) return;
-      document.getElementById('currentUserName').innerText = currentUser.name;
-      const roleBadge = document.getElementById('currentUserRoleBadge');
-      if (currentUser.role === 'admin') roleBadge.innerText = 'Direção Geral';
-      else if (currentUser.role === 'finance') roleBadge.innerText = 'Tesouraria';
-      else roleBadge.innerText = 'Secretaria';
-
-      renderMembers();
-      renderFinance();
-      renderEvents();
-      renderGallery();
-      atualizarDashboard();
-      atualizarSelectMembrosFinanceiro();
-    }
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById('tab-' + tabId).classList.remove('hidden');
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-amber-500/20', 'text-amber-300', 'border', 'border-amber-400/30'));
-      const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
-      if (activeBtn) activeBtn.classList.add('bg-amber-500/20', 'text-amber-300', 'border', 'border-amber-400/30');
-    }
-
-    function atualizarImagensLogotipo() {
-      const url = appData.crestUrl || DEFAULT_CREST;
-      ['loginCrestImg', 'sidebarCrestImg', 'dashCrestImg', 'bgWatermarkImg'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.src = url;
-      });
-    }
-
-    function handleCrestUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        appData.crestUrl = e.target.result;
-        salvarDados();
-        atualizarImagensLogotipo();
-        alert('Logotipo atualizado com sucesso!');
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function carregarDadosLocais() {
-      const salvo = localStorage.getItem('ILE_ASE_CORPORATIVO_V3');
-      if (salvo) {
-        try { appData = JSON.parse(salvo); } catch(e){}
-      }
-    }
-
-    function salvarDados() {
-      localStorage.setItem('ILE_ASE_CORPORATIVO_V3', JSON.stringify(appData));
-      if (isCloudConnected && dbFirestore) {
-        dbFirestore.collection('ile_ase').doc('dados_gerais').set({
-          payload: JSON.stringify(appData),
-          updatedAt: new Date().toISOString()
-        }).catch(err => console.error('Erro ao sincronizar nuvem:', err));
-      }
-      atualizarDashboard();
-    }
-
-    function inicializarNuvemSeConfigurada() {
-      const fbConfigStr = localStorage.getItem('ILE_FIREBASE_CONFIG');
-      if (!fbConfigStr) return;
-      document.getElementById('cfgFirebase').value = fbConfigStr;
-      try {
-        const cfg = JSON.parse(fbConfigStr);
-        if (!firebase.apps.length) firebase.initializeApp(cfg);
-        dbFirestore = firebase.firestore();
-        isCloudConnected = true;
-        document.getElementById('syncDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
-        document.getElementById('syncStatusText').innerText = "Nuvem Sincronizada";
-
-        dbFirestore.collection('ile_ase').doc('dados_gerais').onSnapshot((doc) => {
-          if (doc.exists && doc.data().payload) {
-            appData = JSON.parse(doc.data().payload);
-            localStorage.setItem('ILE_ASE_CORPORATIVO_V3', JSON.stringify(appData));
-            atualizarImagensLogotipo();
-            if (currentUser) {
-              renderMembers();
-              renderFinance();
-              renderEvents();
-              renderGallery();
-              atualizarDashboard();
-            }
-          }
-        });
-      } catch(e) { console.warn('Firebase config error:', e); }
-    }
-
-    function openCloudConfigModal() { document.getElementById('cloudModal').classList.remove('hidden'); document.getElementById('cloudModal').classList.add('flex'); }
-    function salvarConexaoNuvem() {
-      const val = document.getElementById('cfgFirebase').value.trim();
-      if (!val) { localStorage.removeItem('ILE_FIREBASE_CONFIG'); location.reload(); return; }
-      try {
-        JSON.parse(val);
-        localStorage.setItem('ILE_FIREBASE_CONFIG', val);
-        alert('Configuração salva com sucesso! Reiniciando conexão...');
-        location.reload();
-      } catch(e) { alert('JSON inválido.'); }
-    }
-
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-    // INTEGRANTES
-    function openMemberModal() {
-      document.getElementById('memberForm').reset();
-      document.getElementById('memberId').value = '';
-      document.getElementById('memberModalTitle').innerText = 'Novo Integrante';
-      openModal('memberModal');
-    }
-
-    function salvarIntegrante() {
-      const id = document.getElementById('memberId').value || Date.now().toString();
-      const novo = {
-        id,
-        name: document.getElementById('memberName').value,
-        role: document.getElementById('memberRole').value,
-        orixa: document.getElementById('memberOrixa').value,
-        doc: document.getElementById('memberDoc').value,
-        phone: document.getElementById('memberPhone').value,
-        joinDate: document.getElementById('memberJoinDate').value,
-        monthlyFee: parseFloat(document.getElementById('memberMonthlyFee').value) || 50,
-        feeStatus: document.getElementById('memberFeeStatus').value,
-        works: document.getElementById('memberWorks').value
-      };
-
-      const idx = appData.members.findIndex(m => m.id === id);
-      if (idx >= 0) appData.members[idx] = novo;
-      else appData.members.push(novo);
-
-      salvarDados();
-      closeModal('memberModal');
-      renderMembers();
-      atualizarSelectMembrosFinanceiro();
-    }
-
-    function renderMembers() {
-      const query = (document.getElementById('memberSearchInput').value || '').toLowerCase();
-      const grid = document.getElementById('membersGrid');
-      const filtrados = appData.members.filter(m => m.name.toLowerCase().includes(query) || m.role.toLowerCase().includes(query) || (m.orixa && m.orixa.toLowerCase().includes(query)));
-
-      if (filtrados.length === 0) {
-        grid.innerHTML = `<div class="col-span-full glass-card p-6 text-center text-slate-500 italic">Nenhum integrante cadastrado. Clique em "Novo Integrante" para começar.</div>`;
-        return;
-      }
-
-      grid.innerHTML = filtrados.map(m => `
-        <div class="glass-card rounded-2xl p-5 flex flex-col justify-between space-y-3">
-          <div>
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="font-bold text-[#0f2942] text-base">${m.name}</h3>
-                <span class="inline-block text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded uppercase mt-0.5">${m.role}</span>
-              </div>
-              <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${m.feeStatus==='Em Dia'?'bg-emerald-100 text-emerald-800':m.feeStatus==='Isento'?'bg-sky-100 text-sky-800':'bg-rose-100 text-rose-800'}">${m.feeStatus}</span>
-            </div>
-            <div class="mt-3 text-xs text-slate-600 space-y-1">
-              <p><strong>Orixá:</strong> ${m.orixa || 'Não informado'}</p>
-              <p><strong>Telefone:</strong> ${m.phone || '---'}</p>
-              <p><strong>Mensalidade:</strong> R$ ${m.monthlyFee.toFixed(2)}</p>
-            </div>
-          </div>
-          <div class="flex justify-end gap-2 pt-2 border-t border-slate-200">
-            <button onclick="editarIntegrante('${m.id}')" class="px-3 py-1.5 rounded-lg bg-sky-100 text-sky-800 font-semibold text-xs">Editar</button>
-            <button onclick="excluirIntegrante('${m.id}')" class="px-3 py-1.5 rounded-lg bg-rose-100 text-rose-800 font-semibold text-xs">Excluir</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function editarIntegrante(id) {
-      const m = appData.members.find(x => x.id === id);
-      if (!m) return;
-      document.getElementById('memberId').value = m.id;
-      document.getElementById('memberName').value = m.name;
-      document.getElementById('memberRole').value = m.role;
-      document.getElementById('memberOrixa').value = m.orixa || '';
-      document.getElementById('memberDoc').value = m.doc || '';
-      document.getElementById('memberPhone').value = m.phone || '';
-      document.getElementById('memberJoinDate').value = m.joinDate || '';
-      document.getElementById('memberMonthlyFee').value = m.monthlyFee || 50;
-      document.getElementById('memberFeeStatus').value = m.feeStatus || 'Em Dia';
-      document.getElementById('memberWorks').value = m.works || '';
-      document.getElementById('memberModalTitle').innerText = 'Editar Integrante';
-      openModal('memberModal');
-    }
-
-    function excluirIntegrante(id) {
-      if (confirm('Deseja realmente excluir este integrante?')) {
-        appData.members = appData.members.filter(m => m.id !== id);
-        salvarDados();
-        renderMembers();
-        atualizarSelectMembrosFinanceiro();
-      }
-    }
-
-    // FINANCEIRO
-    function openFinanceModal() {
-      document.getElementById('financeForm').reset();
-      document.getElementById('finDate').value = new Date().toISOString().slice(0, 10);
-      openModal('financeModal');
-    }
-
-    function atualizarSelectMembrosFinanceiro() {
-      const sel = document.getElementById('finMember');
-      if (!sel) return;
-      sel.innerHTML = `<option value="">-- Geral da Casa --</option>` + appData.members.map(m => `<option value="${m.name}">${m.name} (${m.role})</option>`).join('');
-    }
-
-    function salvarFinanceiro() {
-      const novo = {
-        id: Date.now().toString(),
-        type: document.getElementById('finType').value,
-        category: document.getElementById('finCategory').value,
-        member: document.getElementById('finMember').value,
-        desc: document.getElementById('finDesc').value,
-        amount: parseFloat(document.getElementById('finAmount').value) || 0,
-        date: document.getElementById('finDate').value
-      };
-      appData.finance.push(novo);
-      salvarDados();
-      closeModal('financeModal');
-      renderFinance();
-    }
-
-    function renderFinance() {
-      const tbody = document.getElementById('financeTableBody');
-      if (!tbody) return;
-      if (appData.finance.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 italic">Nenhum lançamento financeiro registrado.</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = appData.finance.slice().reverse().map(f => `
-        <tr class="hover:bg-slate-50/50">
-          <td class="p-4 text-xs font-mono">${f.date.split('-').reverse().join('/')}</td>
-          <td class="p-4 font-semibold text-[#0f2942]">${f.desc}</td>
-          <td class="p-4 text-xs text-slate-600">${f.member || 'Geral'}</td>
-          <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">${f.category}</span></td>
-          <td class="p-4 font-extrabold ${f.type==='entrada'?'text-emerald-700':'text-rose-700'}">${f.type==='entrada'?'+':'-'} R$ ${f.amount.toFixed(2)}</td>
-          <td class="p-4 text-right"><button onclick="excluirFinanceiro('${f.id}')" class="text-rose-600 text-xs font-bold hover:underline">Excluir</button></td>
-        </tr>
-      `).join('');
-    }
-
-    function excluirFinanceiro(id) {
-      appData.finance = appData.finance.filter(f => f.id !== id);
-      salvarDados();
-      renderFinance();
-    }
-
-    // EVENTOS
-    function openEventModal() {
-      document.getElementById('eventForm').reset();
-      document.getElementById('evDate').value = new Date().toISOString().slice(0, 10);
-      openModal('eventModal');
-    }
-
-    function salvarEvento() {
-      const novo = {
-        id: Date.now().toString(),
-        title: document.getElementById('evTitle').value,
-        date: document.getElementById('evDate').value,
-        time: document.getElementById('evTime').value,
-        desc: document.getElementById('evDesc').value
-      };
-      appData.events.push(novo);
-      salvarDados();
-      closeModal('eventModal');
-      renderEvents();
-    }
-
-    function renderEvents() {
-      const grid = document.getElementById('eventsGrid');
-      const dashList = document.getElementById('dashEventsList');
-      if (!grid) return;
-
-      if (appData.events.length === 0) {
-        grid.innerHTML = `<div class="col-span-full glass-card p-6 text-center text-slate-500 italic">Nenhum evento agendado.</div>`;
-        if (dashList) dashList.innerHTML = `<p class="text-sm text-slate-500 italic">Nenhum evento agendado no momento.</p>`;
-        return;
-      }
-
-      grid.innerHTML = appData.events.map(ev => `
-        <div class="glass-card rounded-2xl p-5 flex flex-col justify-between space-y-3 border-l-4 border-l-amber-500">
-          <div>
-            <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded uppercase">${ev.date.split('-').reverse().join('/')} às ${ev.time}</span>
-            <h3 class="font-bold text-[#0f2942] text-base mt-2">${ev.title}</h3>
-            <p class="text-xs text-slate-600 mt-1">${ev.desc || 'Sem observações.'}</p>
-          </div>
-          <div class="flex justify-end pt-2 border-t border-slate-200">
-            <button onclick="excluirEvento('${ev.id}')" class="text-rose-600 text-xs font-bold hover:underline">Excluir</button>
-          </div>
-        </div>
-      `).join('');
-
-      if (dashList) {
-        dashList.innerHTML = appData.events.slice(0, 3).map(ev => `
-          <div class="p-3 rounded-xl bg-amber-50/70 border border-amber-200 flex justify-between items-center text-xs">
-            <div><strong>${ev.title}</strong> — ${ev.date.split('-').reverse().join('/')} às ${ev.time}</div>
-          </div>
-        `).join('');
-      }
-    }
-
-    function excluirEvento(id) {
-      appData.events = appData.events.filter(e => e.id !== id);
-      salvarDados();
-      renderEvents();
-    }
-
-    // GALERIA
-    function handleGalleryUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        appData.gallery.push({ id: Date.now().toString(), url: e.target.result });
-        salvarDados();
-        renderGallery();
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function renderGallery() {
-      const grid = document.getElementById('galleryGrid');
-      if (!grid) return;
-      if (appData.gallery.length === 0) {
-        grid.innerHTML = `<div class="col-span-full glass-card p-6 text-center text-slate-500 italic">Nenhuma foto no acervo.</div>`;
-        return;
-      }
-      grid.innerHTML = appData.gallery.map(g => `
-        <div class="relative group aspect-square rounded-2xl overflow-hidden glass-card shadow">
-          <img src="${g.url}" class="w-full h-full object-cover" />
-          <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <button onclick="excluirFoto('${g.id}')" class="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold text-xs">Excluir</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function excluirFoto(id) {
-      appData.gallery = appData.gallery.filter(g => g.id !== id);
-      salvarDados();
-      renderGallery();
-    }
-
-    function atualizarDashboard() {
-      const totalMembers = appData.members.length;
-      let income = 0, expense = 0;
-      appData.finance.forEach(f => {
-        if (f.type === 'entrada') income += f.amount;
-        else expense += f.amount;
-      });
-
-      document.getElementById('statTotalMembers').innerText = totalMembers;
-      document.getElementById('statTotalIncome').innerText = 'R$ ' + income.toFixed(2);
-      document.getElementById('statTotalExpense').innerText = 'R$ ' + expense.toFixed(2);
-      document.getElementById('statBalance').innerText = 'R$ ' + (income - expense).toFixed(2);
-    }
-  </script>
-</body>
-</html>
+    function applyLogoEverywhere(url) {
+      state.logoDataUrl = url || DEFAULT_LOGO_SVG;
+      ["loginLogoImg", "sidebarLogoImg", "modalLogoPreview", "flyerLogoImg"].forEach(id => {
+        const el = document.getElement
