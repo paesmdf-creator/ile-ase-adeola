@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#78350f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ilê Asè" />
   <title>Ilê Asè Omo Adeolá — Gestão Institucional</title>
+  <link id="faviconLink" rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22100%22%20r%3D%2295%22%20fill%3D%22%2378350f%22%20stroke%3D%22%23f59e0b%22%20stroke-width%3D%226%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22100%22%20r%3D%2280%22%20fill%3D%22%23fffbeb%22%20stroke%3D%22%23b45309%22%20stroke-width%3D%222%22/%3E%3Ctext%20x%3D%22100%22%20y%3D%2295%22%20font-family%3D%22Georgia%2C%20serif%22%20font-size%3D%2218%22%20font-weight%3D%22bold%22%20fill%3D%22%2378350f%22%20text-anchor%3D%22middle%22%3EIL%C3%8A%20AS%C3%88%3C/text%3E%3Ctext%20x%3D%22100%22%20y%3D%22120%22%20font-family%3D%22Georgia%2C%20serif%22%20font-size%3D%2214%22%20font-weight%3D%22bold%22%20fill%3D%22%23b45309%22%20text-anchor%3D%22middle%22%3EOMO%20ADEOL%C3%81%3C/text%3E%3C/svg%3E" />
+  <link id="appleTouchIconLink" rel="apple-touch-icon" href="" />
+  <link id="manifestLink" rel="manifest" href="" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -59,7 +67,10 @@
           <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
         </button>
 
-        <div class="pt-3 border-t border-slate-100 text-center">
+        <div class="pt-3 border-t border-slate-100 text-center space-y-1.5">
+          <button type="button" id="btnInstallApp" onclick="installPWA()" class="hidden w-full py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-mobile-screen-button"></i> Instalar Aplicativo no Celular
+          </button>
           <p class="text-[11px] text-slate-400">Acesso exclusivo para Administração Geral, Tesouraria e Secretaria.</p>
         </div>
       </form>
@@ -570,7 +581,7 @@
     </div>
   </div>
 
-  <!-- FIREBASE SDK E LÓGICA COMPLETA -->
+  <!-- FIREBASE SDK, PWA MANIFEST DINÂMICO E LÓGICA COMPLETA -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -617,12 +628,85 @@
       gallery: []
     };
 
+    // CONFIGURAÇÃO DO MANIFESTO PWA COM O BRASÃO OFICIAL
+    function syncPWAManifest(iconUrl) {
+      const safeIcon = iconUrl || DEFAULT_LOGO_SVG;
+      const faviconEl = document.getElementById("faviconLink");
+      const appleIconEl = document.getElementById("appleTouchIconLink");
+      const manifestEl = document.getElementById("manifestLink");
+
+      if (faviconEl) faviconEl.href = safeIcon;
+      if (appleIconEl) appleIconEl.href = safeIcon;
+
+      const manifestObj = {
+        name: "Ilê Asè Omo Adeolá — Gestão Institucional",
+        short_name: "Ilê Asè",
+        start_url: "./",
+        scope: "./",
+        display: "standalone",
+        background_color: "#78350f",
+        theme_color: "#78350f",
+        icons: [
+          {
+            src: safeIcon,
+            sizes: "192x192",
+            type: safeIcon.startsWith("data:image/svg") ? "image/svg+xml" : "image/jpeg",
+            purpose: "any maskable"
+          },
+          {
+            src: safeIcon,
+            sizes: "512x512",
+            type: safeIcon.startsWith("data:image/svg") ? "image/svg+xml" : "image/jpeg",
+            purpose: "any maskable"
+          }
+        ]
+      };
+
+      if (manifestEl) {
+        manifestEl.href = "data:application/manifest+json;charset=utf-8," + encodeURIComponent(JSON.stringify(manifestObj));
+      }
+    }
+
+    // REGISTRO DE SERVICE WORKER PARA INSTALAÇÃO NO CHROME / BRAVE
+    if ("serviceWorker" in navigator) {
+      const swCode = `
+        self.addEventListener("install", (e) => self.skipWaiting());
+        self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+        self.addEventListener("fetch", (e) => {
+          e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        });
+      `;
+      const swUrl = "data:text/javascript;charset=utf-8," + encodeURIComponent(swCode);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+
+    let deferredInstallPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const btn = document.getElementById("btnInstallApp");
+      if (btn) btn.classList.remove("hidden");
+    });
+
+    window.installPWA = async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        const btn = document.getElementById("btnInstallApp");
+        if (btn) btn.classList.add("hidden");
+      } else {
+        alert("No Chrome ou Brave, toque no menu (⋮) no canto superior direito e selecione 'Adicionar à tela inicial' ou 'Instalar aplicativo'.");
+      }
+    };
+
     function applyLogoEverywhere(url) {
       state.logoDataUrl = url || DEFAULT_LOGO_SVG;
       ["loginLogoImg", "sidebarLogoImg", "modalLogoPreview", "flyerLogoImg"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.src = state.logoDataUrl;
       });
+      syncPWAManifest(state.logoDataUrl);
     }
     applyLogoEverywhere(DEFAULT_LOGO_SVG);
 
@@ -631,7 +715,6 @@
       if (statusEl) statusEl.innerHTML = html;
     }
 
-    // Libera login imediatamente enquanto tenta sincronizar com o Firestore
     setCloudBadge('<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Pronto para acesso (ile-ase-gestao)');
 
     async function ensureDefaultAdmin() {
@@ -640,755 +723,4 @@
         if (snap.empty) {
           await setDoc(doc(db, "system_users", DEFAULT_ADMIN.id), DEFAULT_ADMIN);
         }
-        setCloudBadge('<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Nuvem Conectada (ile-ase-gestao)');
-      } catch (err) {
-        console.warn("Sincronização inicial em modo local/contingência:", err);
-        setCloudBadge('<span class="w-2 h-2 rounded-full bg-amber-300"></span> Modo Local Ativo (ile-ase-gestao)');
-      }
-    }
-    ensureDefaultAdmin();
-
-    // LISTENERS EM TEMPO REAL (FIRESTORE)
-    onSnapshot(collection(db, "system_users"), (snapshot) => {
-      const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      state.users = docs.length ? docs : [DEFAULT_ADMIN];
-      renderUsersList();
-    }, (err) => console.warn("Listener system_users:", err));
-
-    onSnapshot(doc(db, "system_settings", "branding"), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().logoDataUrl) {
-        applyLogoEverywhere(docSnap.data().logoDataUrl);
-      }
-    }, (err) => console.warn("Listener branding:", err));
-
-    onSnapshot(collection(db, "members"), (snapshot) => {
-      state.members = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderMembers();
-      updateDashboard();
-    }, (err) => console.warn("Listener members:", err));
-
-    onSnapshot(collection(db, "finance"), (snapshot) => {
-      state.finance = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderFinance();
-      updateDashboard();
-    }, (err) => console.warn("Listener finance:", err));
-
-    onSnapshot(collection(db, "events"), (snapshot) => {
-      state.events = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderEvents();
-      updateDashboard();
-    }, (err) => console.warn("Listener events:", err));
-
-    onSnapshot(collection(db, "gallery"), (snapshot) => {
-      state.gallery = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderGallery();
-      updateDashboard();
-    }, (err) => console.warn("Listener gallery:", err));
-
-    // LOGIN POR PALAVRA-CHAVE
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const userInp = document.getElementById("loginUser").value.trim().toLowerCase();
-      const passInp = document.getElementById("loginPass").value.trim();
-      const errBox = document.getElementById("loginError");
-
-      const list = state.users.length ? state.users : [DEFAULT_ADMIN];
-      let found = list.find(u => (u.username || "").trim().toLowerCase() === userInp && String(u.password || "").trim() === passInp);
-
-      if (!found && userInp === DEFAULT_ADMIN.username && passInp === DEFAULT_ADMIN.password) {
-        found = DEFAULT_ADMIN;
-      }
-
-      if (!found) {
-        errBox.textContent = "Palavra-chave ou senha inválida. Verifique com a Administração Geral.";
-        errBox.classList.remove("hidden");
-        return;
-      }
-
-      errBox.classList.add("hidden");
-      state.currentUser = found;
-      enterApp();
-    });
-
-    function enterApp() {
-      document.getElementById("loginScreen").classList.add("hidden");
-      document.getElementById("appScreen").classList.remove("hidden");
-
-      const roleLabels = {
-        admin: "Administração Geral",
-        tesoureiro: "Tesouraria",
-        secretario: "Secretaria"
-      };
-
-      document.getElementById("currentUserName").textContent = state.currentUser.name || "Responsável";
-      document.getElementById("currentUserRoleBadge").textContent = roleLabels[state.currentUser.role] || state.currentUser.role;
-
-      const isAdmin = state.currentUser.role === "admin";
-      const isTesoureiro = state.currentUser.role === "tesoureiro";
-      const isSecretario = state.currentUser.role === "secretario";
-
-      document.getElementById("btnManageUsers").classList.toggle("hidden", !isAdmin);
-      document.getElementById("adminQuickBar").classList.toggle("hidden", !isAdmin);
-      document.getElementById("logoUploadSection").classList.toggle("hidden", !isAdmin);
-
-      document.getElementById("btnAddFinance").classList.toggle("hidden", !(isAdmin || isTesoureiro));
-      document.getElementById("btnAddMember").classList.toggle("hidden", !(isAdmin || isSecretario));
-      document.getElementById("btnAddEvent").classList.toggle("hidden", !(isAdmin || isSecretario));
-      document.getElementById("btnAddPhoto").classList.toggle("hidden", !(isAdmin || isSecretario));
-
-      switchTab("dashboard");
-      updateDashboard();
-    }
-
-    window.logout = () => {
-      state.currentUser = null;
-      document.getElementById("loginPass").value = "";
-      document.getElementById("appScreen").classList.add("hidden");
-      document.getElementById("loginScreen").classList.remove("hidden");
-    };
-
-    window.switchTab = (tabName) => {
-      document.querySelectorAll(".tab-section").forEach(s => s.classList.add("hidden"));
-      document.getElementById(`tab-${tabName}`).classList.remove("hidden");
-      document.querySelectorAll(".nav-btn").forEach(b => {
-        b.classList.remove("tab-active");
-        b.classList.add("text-stone-300");
-      });
-      const activeBtn = document.querySelector(`.nav-btn[data-tab="${tabName}"]`);
-      if (activeBtn) {
-        activeBtn.classList.add("tab-active");
-        activeBtn.classList.remove("text-stone-300");
-      }
-    };
-
-    window.openModal = (id) => {
-      const m = document.getElementById(id);
-      m.classList.remove("hidden");
-      m.classList.add("flex");
-    };
-
-    window.closeModal = (id) => {
-      const m = document.getElementById(id);
-      m.classList.add("hidden");
-      m.classList.remove("flex");
-    };
-
-    // GESTÃO DE CONTAS (EXCLUSIVO ADMIN GERAL)
-    window.openUsersModal = () => {
-      if (state.currentUser?.role !== "admin") return;
-      resetUserForm();
-      renderUsersList();
-      openModal("usersModal");
-    };
-
-    window.resetUserForm = () => {
-      document.getElementById("editUserId").value = "";
-      document.getElementById("accRole").value = "tesoureiro";
-      document.getElementById("accName").value = "";
-      document.getElementById("accUsername").value = "";
-      document.getElementById("accPassword").value = "";
-      document.getElementById("userFormTitle").textContent = "Cadastrar / Substituir Acesso";
-    };
-
-    document.getElementById("userAccountForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (state.currentUser?.role !== "admin") return;
-
-      const id = document.getElementById("editUserId").value || "acc_" + Date.now();
-      const role = document.getElementById("accRole").value;
-      const name = document.getElementById("accName").value.trim();
-      const username = document.getElementById("accUsername").value.trim().toLowerCase();
-      const password = document.getElementById("accPassword").value.trim();
-
-      const payload = { id, role, name, username, password };
-      const idx = state.users.findIndex(u => u.id === id);
-      if (idx >= 0) state.users[idx] = payload;
-      else state.users.push(payload);
-      renderUsersList();
-
-      try {
-        await setDoc(doc(db, "system_users", id), payload);
-      } catch (err) {
-        console.warn("Falha ao gravar credencial na nuvem:", err);
-      }
-      resetUserForm();
-      alert("Credencial salva com sucesso!");
-    });
-
-    window.editUserAccount = (id) => {
-      if (state.currentUser?.role !== "admin") return;
-      const u = state.users.find(x => x.id === id);
-      if (!u) return;
-      document.getElementById("editUserId").value = u.id;
-      document.getElementById("accRole").value = u.role;
-      document.getElementById("accName").value = u.name;
-      document.getElementById("accUsername").value = u.username;
-      document.getElementById("accPassword").value = u.password;
-      document.getElementById("userFormTitle").textContent = "Editando Acesso: " + u.name;
-    };
-
-    window.deleteUserAccount = async (id) => {
-      if (state.currentUser?.role !== "admin") return;
-      if (id === state.currentUser.id) {
-        alert("Você não pode excluir o seu próprio acesso ativo.");
-        return;
-      }
-      if (confirm("Deseja remover este acesso do sistema?")) {
-        state.users = state.users.filter(u => u.id !== id);
-        renderUsersList();
-        try {
-          await deleteDoc(doc(db, "system_users", id));
-        } catch (err) {
-          console.warn("Falha ao remover credencial na nuvem:", err);
-        }
-      }
-    };
-
-    function renderUsersList() {
-      const container = document.getElementById("usersListContainer");
-      if (!container) return;
-      const roleBadge = {
-        admin: "bg-amber-100 text-amber-900",
-        tesoureiro: "bg-emerald-100 text-emerald-900",
-        secretario: "bg-blue-100 text-blue-900"
-      };
-      container.innerHTML = state.users.map(u => `
-        <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-sm text-slate-800">${u.name}</span>
-              <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded ${roleBadge[u.role] || 'bg-slate-200'}">${u.role}</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-0.5">Palavra-chave: <strong>${u.username}</strong> • Senha: <strong>${u.password}</strong></p>
-          </div>
-          <div class="flex gap-1.5">
-            <button onclick="editUserAccount('${u.id}')" class="px-2.5 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-bold"><i class="fa-solid fa-pen"></i></button>
-            <button onclick="deleteUserAccount('${u.id}')" class="px-2.5 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    // UTILITÁRIO COMPRESSÃO DE IMAGEM
-    function compressImage(file, maxWidth = 500) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const scale = Math.min(1, maxWidth / img.width);
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL("image/jpeg", 0.82));
-          };
-          img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    // UPLOAD DE LOGOTIPO OFICIAL
-    window.openLogoModal = () => openModal("logoModal");
-    window.handleLogoUpload = async (e) => {
-      if (state.currentUser?.role !== "admin") return;
-      const file = e.target.files[0];
-      if (!file) return;
-      const dataUrl = await compressImage(file, 400);
-      applyLogoEverywhere(dataUrl);
-      try {
-        await setDoc(doc(db, "system_settings", "branding"), { logoDataUrl: dataUrl });
-      } catch (err) {
-        console.warn("Falha ao salvar brasão na nuvem:", err);
-      }
-      alert("Brasão atualizado com sucesso!");
-    };
-
-    // INTEGRANTES & CARTEIRINHA PDF
-    window.openMemberModal = (id = null) => {
-      document.getElementById("memberForm").reset();
-      document.getElementById("memberId").value = "";
-      document.getElementById("memberModalTitle").textContent = "Novo Integrante";
-      if (id) {
-        const m = state.members.find(x => x.id === id);
-        if (m) {
-          document.getElementById("memberId").value = m.id;
-          document.getElementById("mCivilName").value = m.civilName || "";
-          document.getElementById("mSacredName").value = m.sacredName || "";
-          document.getElementById("mOrixa").value = m.orixa || "";
-          document.getElementById("mRole").value = m.role || "";
-          document.getElementById("mInitDate").value = m.initDate || "";
-          document.getElementById("mDoc").value = m.doc || "";
-          document.getElementById("mPhone").value = m.phone || "";
-          document.getElementById("memberModalTitle").textContent = "Editar Integrante";
-        }
-      }
-      openModal("memberModal");
-    };
-
-    document.getElementById("memberForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = document.getElementById("memberId").value || "mem_" + Date.now();
-      const existing = state.members.find(x => x.id === id);
-      const photoFile = document.getElementById("mPhotoInput").files[0];
-      let photoUrl = existing?.photoUrl || "";
-      if (photoFile) photoUrl = await compressImage(photoFile, 300);
-
-      const payload = {
-        id,
-        civilName: document.getElementById("mCivilName").value.trim(),
-        sacredName: document.getElementById("mSacredName").value.trim(),
-        orixa: document.getElementById("mOrixa").value.trim(),
-        role: document.getElementById("mRole").value.trim(),
-        initDate: document.getElementById("mInitDate").value,
-        doc: document.getElementById("mDoc").value.trim(),
-        phone: document.getElementById("mPhone").value.trim(),
-        photoUrl
-      };
-
-      const idx = state.members.findIndex(m => m.id === id);
-      if (idx >= 0) state.members[idx] = payload;
-      else state.members.push(payload);
-      renderMembers();
-      updateDashboard();
-
-      try {
-        await setDoc(doc(db, "members", id), payload);
-      } catch (err) {
-        console.warn("Falha ao salvar integrante na nuvem:", err);
-      }
-      closeModal("memberModal");
-    });
-
-    window.deleteMember = async (id) => {
-      if (confirm("Excluir este cadastro?")) {
-        state.members = state.members.filter(m => m.id !== id);
-        renderMembers();
-        updateDashboard();
-        try {
-          await deleteDoc(doc(db, "members", id));
-        } catch (err) {
-          console.warn("Falha ao excluir integrante na nuvem:", err);
-        }
-      }
-    };
-
-    window.renderMembers = () => {
-      const q = (document.getElementById("memberSearch")?.value || "").toLowerCase();
-      const filtered = state.members.filter(m =>
-        (m.civilName || "").toLowerCase().includes(q) ||
-        (m.sacredName || "").toLowerCase().includes(q) ||
-        (m.orixa || "").toLowerCase().includes(q)
-      );
-      const tbody = document.getElementById("membersTableBody");
-      const canEdit = state.currentUser?.role === "admin" || state.currentUser?.role === "secretario";
-
-      if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="px-5 py-8 text-center text-slate-400">Nenhum integrante encontrado.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(m => `
-        <tr class="hover:bg-slate-50">
-          <td class="px-5 py-3.5">
-            <p class="font-bold text-slate-900">${m.civilName}</p>
-            <p class="text-xs text-amber-800">${m.sacredName || "Sem dijina informada"}</p>
-          </td>
-          <td class="px-5 py-3.5">
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900">${m.orixa}</span>
-            <p class="text-xs text-slate-500 mt-1">${m.role || "Integrante"}</p>
-          </td>
-          <td class="px-5 py-3.5 text-xs text-slate-600">
-            <p>Iniciação: ${m.initDate || "-"}</p>
-            <p>Tel: ${m.phone || "-"}</p>
-          </td>
-          <td class="px-5 py-3.5 text-right space-x-1.5">
-            <button onclick="generateMemberCardPDF('${m.id}')" class="px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold shadow-sm">
-              <i class="fa-solid fa-id-card"></i> Carteirinha PDF
-            </button>
-            ${canEdit ? `
-              <button onclick="openMemberModal('${m.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="deleteMember('${m.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
-            ` : ""}
-          </td>
-        </tr>
-      `).join("");
-    };
-
-    window.generateMemberCardPDF = (id) => {
-      const m = state.members.find(x => x.id === id);
-      if (!m) return;
-      const { jsPDF } = window.jspdf;
-      const docPdf = new jsPDF({ orientation: "landscape", unit: "mm", format: [95, 60] });
-
-      docPdf.setFillColor(255, 251, 235);
-      docPdf.rect(0, 0, 95, 60, "F");
-      docPdf.setDrawColor(180, 83, 9);
-      docPdf.setLineWidth(1.2);
-      docPdf.rect(2, 2, 91, 56);
-
-      docPdf.setFillColor(120, 53, 15);
-      docPdf.rect(2, 2, 91, 13, "F");
-      docPdf.setTextColor(255, 255, 255);
-      docPdf.setFont("helvetica", "bold");
-      docPdf.setFontSize(9.5);
-      docPdf.text("ILÊ ASÈ OMO ADEOLÁ", 52, 7.5, { align: "center" });
-      docPdf.setFontSize(6.5);
-      docPdf.setFont("helvetica", "normal");
-      docPdf.text("IDENTIFICAÇÃO OFICIAL DE MEMBRO", 52, 12, { align: "center" });
-
-      try {
-        docPdf.addImage(state.logoDataUrl, "PNG", 4, 3, 11, 11);
-      } catch (e) {}
-
-      docPdf.setDrawColor(180, 83, 9);
-      docPdf.setLineWidth(0.4);
-      docPdf.rect(5, 18, 20, 25);
-      if (m.photoUrl) {
-        try {
-          docPdf.addImage(m.photoUrl, "JPEG", 5.3, 18.3, 19.4, 24.4);
-        } catch (e) {}
-      } else {
-        docPdf.setTextColor(150, 150, 150);
-        docPdf.setFontSize(6);
-        docPdf.text("FOTO", 15, 31, { align: "center" });
-      }
-
-      docPdf.setTextColor(30, 41, 59);
-      docPdf.setFont("helvetica", "bold");
-      docPdf.setFontSize(8.5);
-      docPdf.text((m.civilName || "").toUpperCase(), 28, 21, { maxWidth: 63 });
-
-      docPdf.setFontSize(7.2);
-      docPdf.setTextColor(120, 53, 15);
-      docPdf.text(`Nome de Santo: ${m.sacredName || "Não informado"}`, 28, 27);
-      docPdf.setTextColor(51, 65, 85);
-      docPdf.setFont("helvetica", "normal");
-      docPdf.text(`Orixá: ${m.orixa || "-"}   |   Cargo: ${m.role || "Integrante"}`, 28, 32);
-      docPdf.text(`Iniciação: ${m.initDate || "-"}   |   Doc: ${m.doc || "-"}`, 28, 37);
-      docPdf.text(`Contato: ${m.phone || "-"}`, 28, 42);
-
-      docPdf.setDrawColor(120, 53, 15);
-      docPdf.line(28, 51, 88, 51);
-      docPdf.setFontSize(6);
-      docPdf.text("Direção Espiritual / Administração Geral — Ilê Asè Omo Adeolá", 58, 54.5, { align: "center" });
-
-      docPdf.save(`Carteirinha_${(m.civilName || "Membro").replace(/\s+/g, "_")}.pdf`);
-    };
-
-    // TESOURARIA & RECIBO PDF
-    window.openFinanceModal = () => {
-      document.getElementById("financeForm").reset();
-      document.getElementById("fDate").value = new Date().toISOString().split("T")[0];
-      openModal("financeModal");
-    };
-
-    document.getElementById("financeForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = "fin_" + Date.now();
-      const payload = {
-        id,
-        type: document.getElementById("fType").value,
-        date: document.getElementById("fDate").value,
-        person: document.getElementById("fPerson").value.trim(),
-        desc: document.getElementById("fDesc").value.trim(),
-        amount: parseFloat(document.getElementById("fAmount").value),
-        createdBy: state.currentUser?.name || "Tesouraria"
-      };
-      state.finance.push(payload);
-      renderFinance();
-      updateDashboard();
-      try {
-        await setDoc(doc(db, "finance", id), payload);
-      } catch (err) {
-        console.warn("Falha ao salvar lançamento na nuvem:", err);
-      }
-      closeModal("financeModal");
-    });
-
-    window.deleteFinance = async (id) => {
-      if (confirm("Remover este lançamento financeiro?")) {
-        state.finance = state.finance.filter(f => f.id !== id);
-        renderFinance();
-        updateDashboard();
-        try {
-          await deleteDoc(doc(db, "finance", id));
-        } catch (err) {
-          console.warn("Falha ao remover lançamento na nuvem:", err);
-        }
-      }
-    };
-
-    function renderFinance() {
-      let totalIn = 0, totalOut = 0;
-      state.finance.forEach(f => {
-        if (f.type === "entrada") totalIn += Number(f.amount || 0);
-        else totalOut += Number(f.amount || 0);
-      });
-      const net = totalIn - totalOut;
-      const fmt = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-      document.getElementById("finTotalIn").textContent = fmt(totalIn);
-      document.getElementById("finTotalOut").textContent = fmt(totalOut);
-      document.getElementById("finTotalNet").textContent = fmt(net);
-
-      const tbody = document.getElementById("financeTableBody");
-      const canEdit = state.currentUser?.role === "admin" || state.currentUser?.role === "tesoureiro";
-
-      if (!state.finance.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-slate-400">Nenhum lançamento financeiro registrado.</td></tr>';
-        return;
-      }
-
-      const sorted = [...state.finance].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-      tbody.innerHTML = sorted.map(f => `
-        <tr class="hover:bg-slate-50">
-          <td class="px-5 py-3.5 text-xs font-semibold text-slate-600">${f.date}</td>
-          <td class="px-5 py-3.5">
-            <p class="font-bold text-slate-800">${f.desc}</p>
-            <p class="text-xs text-slate-500">${f.person}</p>
-          </td>
-          <td class="px-5 py-3.5">
-            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${f.type === 'entrada' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
-              ${f.type === 'entrada' ? 'Entrada' : 'Saída'}
-            </span>
-          </td>
-          <td class="px-5 py-3.5 font-bold ${f.type === 'entrada' ? 'text-emerald-700' : 'text-red-700'}">${fmt(Number(f.amount))}</td>
-          <td class="px-5 py-3.5 text-right space-x-1.5">
-            <button onclick="generateReceiptPDF('${f.id}')" class="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold">
-              <i class="fa-solid fa-file-invoice-dollar"></i> Recibo PDF
-            </button>
-            ${canEdit ? `<button onclick="deleteFinance('${f.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>` : ""}
-          </td>
-        </tr>
-      `).join("");
-    }
-
-    window.generateReceiptPDF = (id) => {
-      const f = state.finance.find(x => x.id === id);
-      if (!f) return;
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const valFmt = Number(f.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-      pdf.setDrawColor(180, 83, 9);
-      pdf.setLineWidth(1);
-      pdf.rect(15, 15, 180, 115);
-
-      try {
-        pdf.addImage(state.logoDataUrl, "PNG", 22, 20, 22, 22);
-      } catch (e) {}
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(15);
-      pdf.setTextColor(120, 53, 15);
-      pdf.text("ILÊ ASÈ OMO ADEOLÁ", 112, 28, { align: "center" });
-      pdf.setFontSize(9);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(100, 116, 139);
-      pdf.text("Comprovante Oficial de Tesouraria", 112, 34, { align: "center" });
-
-      pdf.setFillColor(254, 243, 199);
-      pdf.rect(22, 47, 166, 12, "F");
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-      pdf.setTextColor(120, 53, 15);
-      pdf.text(`RECIBO DE ${f.type === "entrada" ? "RECEBIMENTO" : "PAGAMENTO"} — ${valFmt}`, 105, 55, { align: "center" });
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
-      pdf.setTextColor(30, 41, 59);
-      const bodyText = f.type === "entrada"
-        ? `Recebemos de ${f.person}, a importância de ${valFmt}, referente a: ${f.desc}.`
-        : `Pagamos a ${f.person}, a importância de ${valFmt}, referente a: ${f.desc}.`;
-
-      const lines = pdf.splitTextToSize(bodyText, 162);
-      pdf.text(lines, 24, 70);
-
-      pdf.setFontSize(10);
-      pdf.text(`Data do lançamento: ${f.date}`, 24, 92);
-      pdf.text(`Emitido por: ${f.createdBy || "Tesouraria"}`, 24, 98);
-
-      pdf.line(55, 116, 155, 116);
-      pdf.setFontSize(9);
-      pdf.text("Tesouraria / Administração — Ilê Asè Omo Adeolá", 105, 121, { align: "center" });
-
-      pdf.save(`Recibo_IleAse_${f.date}_${f.person.replace(/\s+/g, "_")}.pdf`);
-    };
-
-    // EVENTOS & INFORMATIVOS PARA REDES SOCIAIS (html2canvas PNG)
-    window.openEventModal = () => {
-      document.getElementById("eventForm").reset();
-      openModal("eventModal");
-    };
-
-    document.getElementById("eventForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = "evt_" + Date.now();
-      const payload = {
-        id,
-        title: document.getElementById("eTitle").value.trim(),
-        date: document.getElementById("eDate").value,
-        time: document.getElementById("eTime").value,
-        location: document.getElementById("eLocation").value.trim(),
-        notes: document.getElementById("eNotes").value.trim()
-      };
-      state.events.push(payload);
-      renderEvents();
-      updateDashboard();
-      try {
-        await setDoc(doc(db, "events", id), payload);
-      } catch (err) {
-        console.warn("Falha ao salvar evento na nuvem:", err);
-      }
-      closeModal("eventModal");
-    });
-
-    window.deleteEvent = async (id) => {
-      if (confirm("Remover este evento?")) {
-        state.events = state.events.filter(e => e.id !== id);
-        renderEvents();
-        updateDashboard();
-        try {
-          await deleteDoc(doc(db, "events", id));
-        } catch (err) {
-          console.warn("Falha ao remover evento na nuvem:", err);
-        }
-      }
-    };
-
-    function renderEvents() {
-      const grid = document.getElementById("eventsGrid");
-      const canEdit = state.currentUser?.role === "admin" || state.currentUser?.role === "secretario";
-
-      if (!state.events.length) {
-        grid.innerHTML = '<div class="col-span-full bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">Nenhum evento cadastrado.</div>';
-        return;
-      }
-
-      grid.innerHTML = state.events.map(ev => `
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <div class="flex items-center justify-between gap-2">
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900">${ev.date} às ${ev.time}</span>
-              ${canEdit ? `<button onclick="deleteEvent('${ev.id}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash"></i></button>` : ""}
-            </div>
-            <h3 class="font-sacred text-lg font-bold text-slate-900 mt-3">${ev.title}</h3>
-            <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-amber-700"></i> ${ev.location}</p>
-            <p class="text-sm text-slate-600 mt-3">${ev.notes || ""}</p>
-          </div>
-          <button onclick="downloadSocialFlyer('${ev.id}')" class="w-full py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center justify-center gap-2 hover:opacity-95">
-            <i class="fa-solid fa-share-nodes"></i> Baixar Informativo c/ Logo (PNG)
-          </button>
-        </div>
-      `).join("");
-    }
-
-    window.downloadSocialFlyer = async (id) => {
-      const ev = state.events.find(x => x.id === id);
-      if (!ev) return;
-
-      document.getElementById("flyerLogoImg").src = state.logoDataUrl;
-      document.getElementById("flyerTitle").textContent = ev.title;
-      document.getElementById("flyerDateTime").textContent = `${ev.date.split("-").reverse().join("/")} • ${ev.time}h`;
-      document.getElementById("flyerNotes").textContent = ev.notes || "Todos são bem-vindos com axé!";
-      document.getElementById("flyerLocation").textContent = ev.location || "Ilê Asè Omo Adeolá";
-
-      const flyerEl = document.getElementById("socialFlyer");
-      const canvas = await window.html2canvas(flyerEl, { scale: 2, useCORS: true });
-      const link = document.createElement("a");
-      link.download = `Informativo_IleAse_${ev.title.replace(/\s+/g, "_")}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    };
-
-    // ACERVO FOTOGRÁFICO
-    window.openPhotoModal = () => {
-      document.getElementById("photoForm").reset();
-      openModal("photoModal");
-    };
-
-    document.getElementById("photoForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const file = document.getElementById("pFile").files[0];
-      if (!file) return;
-      const imageUrl = await compressImage(file, 800);
-      const id = "pho_" + Date.now();
-      const payload = {
-        id,
-        caption: document.getElementById("pCaption").value.trim(),
-        imageUrl
-      };
-      state.gallery.push(payload);
-      renderGallery();
-      updateDashboard();
-      try {
-        await setDoc(doc(db, "gallery", id), payload);
-      } catch (err) {
-        console.warn("Falha ao salvar foto na nuvem:", err);
-      }
-      closeModal("photoModal");
-    });
-
-    window.deletePhoto = async (id) => {
-      if (confirm("Excluir esta foto do acervo?")) {
-        state.gallery = state.gallery.filter(p => p.id !== id);
-        renderGallery();
-        updateDashboard();
-        try {
-          await deleteDoc(doc(db, "gallery", id));
-        } catch (err) {
-          console.warn("Falha ao excluir foto na nuvem:", err);
-        }
-      }
-    };
-
-    function renderGallery() {
-      const grid = document.getElementById("galleryGrid");
-      const canEdit = state.currentUser?.role === "admin" || state.currentUser?.role === "secretario";
-
-      if (!state.gallery.length) {
-        grid.innerHTML = '<div class="col-span-full bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">Nenhuma foto adicionada ao acervo ainda.</div>';
-        return;
-      }
-
-      grid.innerHTML = state.gallery.map(p => `
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-          <img src="${p.imageUrl}" alt="${p.caption}" class="w-full h-52 object-cover" />
-          <div class="p-3.5 flex items-center justify-between gap-2">
-            <p class="text-xs font-bold text-slate-700">${p.caption}</p>
-            ${canEdit ? `<button onclick="deletePhoto('${p.id}')" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button>` : ""}
-          </div>
-        </div>
-      `).join("");
-    }
-
-    // DASHBOARD SUMMARY
-    function updateDashboard() {
-      document.getElementById("statMembers").textContent = state.members.length;
-      document.getElementById("statEvents").textContent = state.events.length;
-      document.getElementById("statPhotos").textContent = state.gallery.length;
-
-      let totalIn = 0, totalOut = 0;
-      state.finance.forEach(f => {
-        if (f.type === "entrada") totalIn += Number(f.amount || 0);
-        else totalOut += Number(f.amount || 0);
-      });
-      const net = totalIn - totalOut;
-      document.getElementById("statBalance").textContent = net.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-      const evList = document.getElementById("dashEventsList");
-      evList.innerHTML = state.events.length
-        ? state.events.slice(0, 4).map(e => `<div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100 flex justify-between"><span class="font-semibold text-slate-800">${e.title}</span><span class="text-xs font-bold text-amber-800">${e.date}</span></div>`).join("")
-        : "Nenhuma gira ou evento agendado.";
-
-      const finList = document.getElementById("dashFinanceList");
-      finList.innerHTML = state.finance.length
-        ? state.finance.slice(0, 4).map(f => `<div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex justify-between"><span class="font-semibold text-slate-800">${f.desc}</span><span class="text-xs font-bold ${f.type === 'entrada' ? 'text-emerald-700' : 'text-red-700'}">${Number(f.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span></div>`).join("")
-        : "Nenhuma movimentação registrada.";
-    }
-  </script>
-</body>
-</html>
+        setCloudBadge('<span class
