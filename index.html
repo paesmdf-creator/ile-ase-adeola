@@ -15,6 +15,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -118,10 +119,10 @@
             <i class="fa-solid fa-users w-5 text-center"></i> Filhos da Casa & Carteirinhas
           </button>
           <button onclick="switchTab('finance')" data-tab="finance" id="navFinance" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-300 hover:bg-stone-800 transition">
-            <i class="fa-solid fa-coins w-5 text-center"></i> Tesouraria & Recibos
+            <i class="fa-solid fa-coins w-5 text-center"></i> Tesouraria, Carnês & Pix
           </button>
           <button onclick="switchTab('events')" data-tab="events" id="navEvents" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-300 hover:bg-stone-800 transition">
-            <i class="fa-solid fa-calendar-days w-5 text-center"></i> Giras & Informativos Sociais
+            <i class="fa-solid fa-calendar-days w-5 text-center"></i> Giras & Convites
           </button>
           <button onclick="switchTab('gallery')" data-tab="gallery" id="navGallery" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-stone-300 hover:bg-stone-800 transition">
             <i class="fa-solid fa-images w-5 text-center"></i> Acervo Fotográfico
@@ -238,16 +239,24 @@
         </div>
       </section>
 
-      <!-- ABA 3: TESOURARIA & RECIBOS -->
+      <!-- ABA 3: TESOURARIA, CARNÊS & PIX -->
       <section id="tab-finance" class="tab-section hidden space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 class="font-sacred text-2xl font-bold text-stone-900">Tesouraria & Emissão de Recibos</h1>
-            <p class="text-sm text-slate-500">Controle de mensalidades, doações, despesas e recibos timbrados em PDF.</p>
+            <h1 class="font-sacred text-2xl font-bold text-stone-900">Tesouraria, Carnês & Pix</h1>
+            <p class="text-sm text-slate-500">Controle de caixa, recibos em PDF e carnês individuais com Pix Copia e Cola / QR Code.</p>
           </div>
-          <button id="btnAddFinance" onclick="openFinanceModal()" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow flex items-center gap-2">
-            <i class="fa-solid fa-plus"></i> Novo Lançamento
-          </button>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnTreasuryBank" onclick="openTreasuryBankModal()" class="px-4 py-2.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold shadow flex items-center gap-2">
+              <i class="fa-solid fa-building-columns"></i> Dados Bancários / Pix
+            </button>
+            <button id="btnAddCarne" onclick="openCarneModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center gap-2">
+              <i class="fa-solid fa-qrcode"></i> Gerar Carnê / Recibo Pix
+            </button>
+            <button id="btnAddFinance" onclick="openFinanceModal()" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i> Novo Lançamento
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -265,6 +274,45 @@
           </div>
         </div>
 
+        <!-- PAINEL DE CARNÊS & COBRANÇAS INDIVIDUAIS -->
+        <div class="bg-white rounded-2xl border border-amber-200/80 shadow-sm overflow-hidden">
+          <div class="p-4 bg-amber-50/70 border-b border-amber-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <h2 class="font-bold text-stone-900 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice text-amber-700"></i> Carnês & Recibos Individuais de Mensalidade (Pix / QR Code)
+              </h2>
+              <p id="treasuryBankSummary" class="text-xs text-slate-500 mt-0.5">Configure os dados bancários e chave Pix da casa para gerar cobranças individuais.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="carneFilterMember" onchange="renderCarnes()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white">
+                <option value="">Todos os integrantes</option>
+              </select>
+              <select id="carneFilterStatus" onchange="renderCarnes()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white">
+                <option value="">Todos os status</option>
+                <option value="pendente">Pendente</option>
+                <option value="pago">Pago</option>
+              </select>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold">
+                <tr>
+                  <th class="px-5 py-3">Integrante</th>
+                  <th class="px-5 py-3">Competência / Venc.</th>
+                  <th class="px-5 py-3">Valor</th>
+                  <th class="px-5 py-3">Status</th>
+                  <th class="px-5 py-3 text-right">Pix / QR Code / Recibo</th>
+                </tr>
+              </thead>
+              <tbody id="carnesTableBody" class="divide-y divide-slate-100">
+                <tr><td colspan="5" class="px-5 py-6 text-center text-slate-400 text-xs">Nenhum carnê ou cobrança individual gerada ainda.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TABELA DE LANÇAMENTOS DO CAIXA -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
@@ -289,17 +337,17 @@
       <section id="tab-events" class="tab-section hidden space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 class="font-sacred text-2xl font-bold text-stone-900">Giras & Informativos para Redes Sociais</h1>
-            <p class="text-sm text-slate-500">Agende eventos e gere artes oficiais com o brasão da casa para WhatsApp e Instagram.</p>
+            <h1 class="font-sacred text-2xl font-bold text-stone-900">Giras & Convites para Redes Sociais</h1>
+            <p class="text-sm text-slate-500">Agende eventos e gere convites com brasão oficial, imagem temática e cor de fundo personalizada.</p>
           </div>
           <button id="btnAddEvent" onclick="openEventModal()" class="px-4 py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center gap-2">
-            <i class="fa-solid fa-calendar-plus"></i> Novo Evento / Informativo
+            <i class="fa-solid fa-calendar-plus"></i> Novo Evento / Convite
           </button>
         </div>
 
         <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           <div class="col-span-full bg-white p-8 rounded-2xl border border-slate-200 text-center text-slate-400 text-sm">
-            Nenhum evento cadastrado. Clique em "Novo Evento / Informativo" para criar e gerar o card de divulgação.
+            Nenhum evento cadastrado. Clique em "Novo Evento / Convite" para criar e gerar o card de divulgação.
           </div>
         </div>
       </section>
@@ -473,17 +521,165 @@
     </div>
   </div>
 
+  <!-- MODAL: DADOS BANCÁRIOS / PIX DA TESOURARIA -->
+  <div id="treasuryBankModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+      <div class="bg-amber-900 p-5 text-white flex items-center justify-between">
+        <div>
+          <h3 class="font-sacred text-lg font-bold">Dados Bancários & Chave Pix</h3>
+          <p class="text-xs text-amber-200">Cadastro manual para Carnês, Recibos e Pix Copia e Cola</p>
+        </div>
+        <button onclick="closeModal('treasuryBankModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="treasuryBankForm" class="p-6 space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Instituição Bancária *</label>
+            <input type="text" id="tbBankName" required placeholder="Ex: Caixa, Bradesco, Nubank, BB" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Titular da Conta *</label>
+            <input type="text" id="tbHolder" required placeholder="Nome do titular" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Agência</label>
+            <input type="text" id="tbAgency" placeholder="0000" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Conta Corrente / Poupança</label>
+            <input type="text" id="tbAccount" placeholder="00000-0" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Chave Pix da Tesouraria *</label>
+            <input type="text" id="tbPixKey" required placeholder="CPF, CNPJ, E-mail, Telefone ou Aleatória" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Cidade do Recebedor (Pix) *</label>
+            <input type="text" id="tbCity" required placeholder="Ex: Itanhaem" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('treasuryBankModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Salvar Dados Bancários</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: GERAR CARNÊ / RECIBO PIX INDIVIDUAL -->
+  <div id="carneModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+      <div class="gold-gradient p-5 text-white flex items-center justify-between">
+        <div>
+          <h3 class="font-sacred text-lg font-bold">Gerar Carnê / Recibo Pix</h3>
+          <p class="text-xs text-amber-100">Individual por integrante — Mês a mês ou lote de 12 meses</p>
+        </div>
+        <button onclick="closeModal('carneModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="carneForm" class="p-6 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Integrante Cadastrado *</label>
+          <select id="cMemberSelect" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white"></select>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Modalidade de Emissão *</label>
+            <select id="cMode" onchange="toggleCarneModeFields()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+              <option value="single">Mês a mês (1 competência)</option>
+              <option value="annual">Ano inteiro (12 parcelas)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Valor da Mensalidade (R$) *</label>
+            <input type="number" step="0.01" min="0.01" id="cAmount" required placeholder="50.00" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div id="cSingleFields" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Mês de Referência *</label>
+            <input type="month" id="cMonthRef" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Data de Vencimento *</label>
+            <input type="date" id="cDueDate" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div id="cAnnualFields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Ano do Carnê *</label>
+            <input type="number" id="cYearRef" min="2025" max="2035" value="2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Dia de Vencimento Mensal *</label>
+            <input type="number" id="cDueDay" min="1" max="28" value="10" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Observação no Carnê / Recibo</label>
+          <input type="text" id="cNotes" placeholder="Ex: Contribuição mensal Ilê Asè Omo Adeolá" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+        </div>
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('carneModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Gerar Cobrança(s)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: VISUALIZAR CARNÊ / RECIBO COM PIX COPIA E COLA E QR CODE -->
+  <div id="carneViewModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+      <div class="gold-gradient p-5 text-white flex items-center justify-between">
+        <div>
+          <h3 class="font-sacred text-lg font-bold">Carnê / Recibo de Mensalidade</h3>
+          <p id="cvSubtitle" class="text-xs text-amber-100">Pix Copia e Cola + QR Code</p>
+        </div>
+        <button onclick="closeModal('carneViewModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-4">
+        <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-1.5 text-xs">
+          <p class="font-bold text-amber-950 text-sm" id="cvMemberName">Integrante</p>
+          <p class="text-slate-600" id="cvCompetence">Competência / Vencimento</p>
+          <p class="font-bold text-emerald-800 text-base" id="cvAmount">R$ 0,00</p>
+          <p class="text-slate-600" id="cvBankInfo">Banco / Conta</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl border border-slate-200 bg-white">
+          <div class="shrink-0 p-2 rounded-xl border border-slate-200 bg-white flex items-center justify-center">
+            <div id="cvQrContainer" class="w-[140px] h-[140px] flex items-center justify-center"></div>
+          </div>
+          <div class="flex-1 w-full space-y-2">
+            <label class="block text-[11px] font-bold uppercase text-slate-500">Pix Copia e Cola (BR Code)</label>
+            <textarea id="cvPixPayload" rows="3" readonly class="w-full p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-[11px] font-mono text-slate-700"></textarea>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="copyCarnePix()" class="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold">
+                <i class="fa-solid fa-copy mr-1"></i> Copiar Pix
+              </button>
+              <button type="button" id="cvDownloadPdfBtn" class="px-3 py-1.5 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold">
+                <i class="fa-solid fa-file-pdf mr-1"></i> Baixar Carnê/Recibo PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: EVENTO & INFORMATIVO -->
   <div id="eventModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
       <div class="gold-gradient p-5 text-white flex items-center justify-between">
-        <h3 class="font-sacred text-lg font-bold">Novo Evento / Informativo</h3>
+        <h3 class="font-sacred text-lg font-bold">Novo Evento / Convite</h3>
         <button onclick="closeModal('eventModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form id="eventForm" class="p-6 space-y-3">
+      <form id="eventForm" class="p-6 space-y-3 max-h-[85vh] overflow-y-auto">
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">Título da Gira / Festividade *</label>
-          <input type="text" id="eTitle" required placeholder="Ex: Gira de Caboclos / Festa de Oxóssi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          <input type="text" id="eTitle" required placeholder="Ex: Festa de Oxóssi / Ajodum de Ogum" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -500,18 +696,39 @@
           <input type="text" id="eLocation" value="Ilê Asè Omo Adeolá — Itanhaém/SP" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">Mensagem / Orientações para o Informativo</label>
-          <textarea id="eNotes" rows="3" placeholder="Ex: Traje branco. Todos são bem-vindos com axé!" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"></textarea>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Mensagem / Detalhes do Convite</label>
+          <textarea id="eNotes" rows="2" placeholder="Ex: Convite para o Ajodum do filho de santo de Ogum..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"></textarea>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Cor de Fundo do Convite</label>
+            <div class="flex items-center gap-2">
+              <input type="color" id="eBgColor" value="#451a03" class="w-11 h-9 rounded-lg border border-slate-300 cursor-pointer bg-white" />
+              <select onchange="document.getElementById('eBgColor').value = this.value" class="flex-1 px-2.5 py-2 rounded-xl border border-slate-300 text-xs bg-white">
+                <option value="#451a03">Âmbar Escuro (Padrão)</option>
+                <option value="#064e3b">Verde Oxóssi</option>
+                <option value="#1e3a8a">Azul Ogum / Iemanjá</option>
+                <option value="#7f1d1d">Vermelho Xangô / Iansã</option>
+                <option value="#3b0764">Roxo Nanã / Obaluaiê</option>
+                <option value="#fffbeb">Creme Claro (Impressão)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Imagem Temática Externa (Opcional)</label>
+            <input type="file" id="eThemeImage" accept="image/*" class="w-full text-xs text-slate-500" />
+            <p class="text-[10px] text-slate-400 mt-0.5">Adicionada ao convite sem remover o logotipo oficial.</p>
+          </div>
         </div>
         <div class="pt-3 flex justify-end gap-2">
           <button type="button" onclick="closeModal('eventModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
-          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Salvar Evento</button>
+          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Salvar Convite</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: GALERIA -->
+  <!-- MODAL: ACERVO FOTOGRÁFICO -->
   <div id="photoModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
     <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
       <div class="gold-gradient p-5 text-white flex items-center justify-between">
@@ -520,72 +737,79 @@
       </div>
       <form id="photoForm" class="p-6 space-y-3">
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">Legenda / Título *</label>
-          <input type="text" id="pCaption" required placeholder="Ex: Saída de Yaô — Novembro 2026" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+          <label class="block text-xs font-bold text-slate-600 mb-1">Legenda / Descrição *</label>
+          <input type="text" id="pCaption" required placeholder="Ex: Obrigação de Mesa / Festa Anual" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">Selecionar Imagem *</label>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Selecionar Foto *</label>
           <input type="file" id="pFile" accept="image/*" required class="w-full text-xs text-slate-500" />
         </div>
         <div class="pt-3 flex justify-end gap-2">
           <button type="button" onclick="closeModal('photoModal')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancelar</button>
-          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Publicar no Acervo</button>
+          <button type="submit" class="px-5 py-2 rounded-xl gold-gradient text-white text-xs font-bold shadow">Salvar no Acervo</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: LOGOTIPO OFICIAL -->
-  <div id="logoModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden text-center">
-      <div class="gold-gradient p-4 text-white flex items-center justify-between">
-        <h3 class="font-sacred text-base font-bold">Brasão Oficial — Ilê Asè Omo Adeolá</h3>
+  <!-- MODAL: BRASÃO / LOGOTIPO OFICIAL -->
+  <div id="logoModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+      <div class="gold-gradient p-5 text-white flex items-center justify-between">
+        <h3 class="font-sacred text-lg font-bold">Brasão / Logotipo Oficial</h3>
         <button onclick="closeModal('logoModal')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-6 space-y-4">
-        <div class="w-48 h-48 mx-auto rounded-full border-4 border-amber-500 p-2 bg-amber-50 shadow-inner flex items-center justify-center overflow-hidden">
-          <img id="modalLogoPreview" src="" alt="Brasão" class="w-full h-full object-contain rounded-full" />
+      <div class="p-6 space-y-4 text-center">
+        <div class="w-32 h-32 mx-auto rounded-full bg-amber-50 p-2 border-2 border-amber-400 flex items-center justify-center overflow-hidden">
+          <img id="modalLogoPreview" src="" alt="Brasão Oficial" class="w-full h-full object-contain rounded-full" />
         </div>
-        <div id="logoUploadSection" class="space-y-2">
-          <label class="block text-xs font-bold text-slate-600">Atualizar Imagem do Brasão (salva para todos os aparelhos)</label>
+        <div id="logoUploadSection" class="hidden space-y-2 text-left">
+          <label class="block text-xs font-bold text-slate-600">Alterar Logotipo Oficial (Admin Geral)</label>
           <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)" class="w-full text-xs text-slate-500" />
         </div>
+        <button type="button" onclick="closeModal('logoModal')" class="px-5 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">Fechar</button>
       </div>
     </div>
   </div>
 
-  <!-- ÁREA OCULTA PARA RENDERIZAÇÃO DO INFORMATIVO DE REDES SOCIAIS (PNG) -->
-  <div id="socialCardRenderZone" class="fixed -left-[9999px] top-0">
-    <div id="socialFlyer" class="w-[600px] h-[750px] bg-gradient-to-b from-amber-950 via-stone-900 to-amber-950 text-white p-10 flex flex-col justify-between border-[10px] border-amber-500 relative overflow-hidden">
-      <div class="text-center z-10">
-        <div class="w-28 h-28 mx-auto rounded-full bg-white p-1.5 border-4 border-amber-400 shadow-xl overflow-hidden">
-          <img id="flyerLogoImg" src="" class="w-full h-full object-contain rounded-full" />
+  <!-- CONVITE / INFORMATIVO PARA REDES SOCIAIS (LOGOTIPO SEMPRE PRESENTE) -->
+  <div class="fixed -left-[9999px] top-0 pointer-events-none">
+    <div id="socialFlyer" style="width: 540px; min-height: 640px; background-color: #451a03; color: #fffbeb;" class="p-8 flex flex-col justify-between rounded-3xl border-4 border-amber-400 relative overflow-hidden">
+      <div class="text-center space-y-2 z-10">
+        <div class="w-20 h-20 mx-auto rounded-full bg-white p-1.5 border-2 border-amber-300 shadow flex items-center justify-center overflow-hidden">
+          <img id="flyerLogoImg" src="" alt="Logotipo Oficial Ilê Asè Omo Adeolá" class="w-full h-full object-contain rounded-full" />
         </div>
-        <p class="text-amber-300 text-xs font-bold uppercase tracking-[0.25em] mt-4">Convite Oficial</p>
-        <h2 class="font-sacred text-2xl font-bold text-white mt-1">Ilê Asè Omo Adeolá</h2>
+        <p id="flyerBrandLabel" class="font-sacred text-xs tracking-widest uppercase text-amber-300">Ilê Asè Omo Adeolá</p>
+        <h2 id="flyerTitle" class="font-sacred text-2xl font-bold leading-snug">Título do Evento</h2>
+        <p id="flyerDateTime" class="text-sm font-bold text-amber-200">Data • Horário</p>
       </div>
 
-      <div class="my-auto bg-white/10 backdrop-blur-sm border border-amber-400/40 rounded-3xl p-7 text-center z-10 space-y-4">
-        <h1 id="flyerTitle" class="font-sacred text-3xl font-bold text-amber-300 leading-tight">Gira Festiva</h1>
-        <div class="inline-block px-5 py-2 rounded-full bg-amber-500 text-stone-950 font-bold text-base">
-          <span id="flyerDateTime">Data e Horário</span>
-        </div>
-        <p id="flyerNotes" class="text-stone-100 text-base leading-relaxed">Todos são bem-vindos com axé e respeito.</p>
+      <div id="flyerThemeWrap" class="my-4 hidden z-10">
+        <img id="flyerThemeImg" src="" alt="Imagem Temática" class="w-full h-56 object-cover rounded-2xl border-2 border-amber-300/70 shadow-lg" />
       </div>
 
-      <div class="text-center z-10 border-t border-amber-500/30 pt-4">
-        <p id="flyerLocation" class="text-sm font-semibold text-amber-200">Ilê Asè Omo Adeolá — Itanhaém/SP</p>
-        <p class="text-[11px] text-stone-400 mt-1">Axé para todos os irmãos e visitantes</p>
+      <div id="flyerNotesBox" class="my-3 p-4 rounded-2xl bg-black/30 border border-amber-300/30 text-center z-10">
+        <p id="flyerNotes" class="text-sm leading-relaxed">Mensagem do convite</p>
+      </div>
+
+      <div id="flyerFooterBox" class="text-center text-xs text-amber-200 z-10 space-y-1">
+        <p id="flyerLocation" class="font-semibold">Local</p>
+        <p class="text-[11px] opacity-80">Axé • Ilê Asè Omo Adeolá</p>
       </div>
     </div>
   </div>
 
-  <!-- FIREBASE SDK, PWA E LÓGICA COMPLETA -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      deleteDoc,
+      onSnapshot,
+      collection
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // Registro seguro de Service Worker real (evita tela preta no Android)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch((err) => {
@@ -594,155 +818,144 @@
       });
     }
 
+    let deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById("btnInstallApp")?.classList.remove("hidden");
+    });
+
+    window.installPWA = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById("btnInstallApp")?.classList.add("hidden");
+    };
+
     const firebaseConfig = {
-      apiKey: "AIzaSyCYETV_jJBKNTu-zi0IHiyBer05J-aRSoc",
-      authDomain: "ile-ase-gestao.firebaseapp.com",
+      apiKey: "AIzaSyACDtzYKklKNSRpLqX-wMeAf3nIdkHuvGs",
+      authDomain: "cp-construcoes-481db.firebaseapp.com",
       projectId: "ile-ase-gestao",
       storageBucket: "ile-ase-gestao.firebasestorage.app",
-      messagingSenderId: "91463307801",
-      appId: "1:91463307801:web:ce32102e39030ec0e75088",
-      measurementId: "G-DW9PPER98E"
+      messagingSenderId: "610096987498",
+      appId: "1:610096987498:web:68dd2c452ad25c67e0f913"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const DEFAULT_LOGO = document.getElementById("faviconLink").href;
 
-    const DEFAULT_LOGO_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="95" fill="#78350f" stroke="#f59e0b" stroke-width="6"/>
-        <circle cx="100" cy="100" r="80" fill="#fffbeb" stroke="#b45309" stroke-width="2"/>
-        <path d="M100 35 L115 80 L160 80 L123 108 L137 152 L100 125 L63 152 L77 108 L40 80 L85 80 Z" fill="#b45309" opacity="0.2"/>
-        <text x="100" y="92" font-family="Georgia, serif" font-size="18" font-weight="bold" fill="#78350f" text-anchor="middle">ILÊ ASÈ</text>
-        <text x="100" y="116" font-family="Georgia, serif" font-size="15" font-weight="bold" fill="#b45309" text-anchor="middle">OMO ADEOLÁ</text>
-        <text x="100" y="142" font-family="sans-serif" font-size="10" font-weight="bold" fill="#92400e" text-anchor="middle">AXÉ • FÉ • TRADIÇÃO</text>
-      </svg>
-    `);
-
-    const DEFAULT_ADMIN = {
-      id: "admin_master",
-      role: "admin",
-      name: "Administração Geral",
-      username: "admin",
-      password: "123"
-    };
-
-    let state = {
+    const state = {
       currentUser: null,
-      logoDataUrl: DEFAULT_LOGO_SVG,
-      users: [DEFAULT_ADMIN],
+      logoDataUrl: DEFAULT_LOGO,
+      users: [
+        { id: "acc_admin_default", role: "admin", name: "Administração Geral", username: "admin", password: "123" },
+        { id: "acc_tes_default", role: "tesoureiro", name: "Tesouraria", username: "tesoureiro", password: "123" },
+        { id: "acc_sec_default", role: "secretario", name: "Secretaria", username: "secretario", password: "123" }
+      ],
       members: [],
       finance: [],
+      carnes: [],
+      treasuryBank: {
+        bankName: "",
+        holder: "",
+        agency: "",
+        account: "",
+        pixKey: "",
+        city: "Itanhaem"
+      },
       events: [],
       gallery: []
     };
 
-    function applyLogoEverywhere(url) {
-      state.logoDataUrl = url || DEFAULT_LOGO_SVG;
+    function applyLogoEverywhere(dataUrl) {
+      state.logoDataUrl = dataUrl || DEFAULT_LOGO;
       ["loginLogoImg", "sidebarLogoImg", "modalLogoPreview", "flyerLogoImg"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.src = state.logoDataUrl;
       });
-      const faviconEl = document.getElementById("faviconLink");
-      const appleIconEl = document.getElementById("appleTouchIconLink");
-      if (faviconEl) faviconEl.href = state.logoDataUrl;
-      if (appleIconEl) appleIconEl.href = state.logoDataUrl;
-    }
-    applyLogoEverywhere(DEFAULT_LOGO_SVG);
-
-    let deferredInstallPrompt = null;
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      const btn = document.getElementById("btnInstallApp");
-      if (btn) btn.classList.remove("hidden");
-    });
-
-    window.installPWA = async () => {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        await deferredInstallPrompt.userChoice;
-        deferredInstallPrompt = null;
-        const btn = document.getElementById("btnInstallApp");
-        if (btn) btn.classList.add("hidden");
-      } else {
-        alert("No Chrome ou Brave, toque no menu (⋮) no canto superior direito e selecione 'Instalar aplicativo' ou 'Adicionar à tela inicial'.");
-      }
-    };
-
-    function setCloudBadge(html) {
-      const statusEl = document.getElementById("cloudStatusLogin");
-      if (statusEl) statusEl.innerHTML = html;
+      const appleIcon = document.getElementById("appleTouchIconLink");
+      if (appleIcon) appleIcon.href = state.logoDataUrl;
     }
 
-    setCloudBadge('<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Pronto para acesso (ile-ase-gestao)');
+    applyLogoEverywhere(DEFAULT_LOGO);
 
-    async function ensureDefaultAdmin() {
-      try {
-        const snap = await getDocs(collection(db, "system_users"));
-        if (snap.empty) {
-          await setDoc(doc(db, "system_users", DEFAULT_ADMIN.id), DEFAULT_ADMIN);
+    let app, db;
+    try {
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      setTimeout(() => {
+        const loginBadge = document.getElementById("cloudStatusLogin");
+        if (loginBadge) {
+          loginBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Nuvem Conectada';
         }
-        setCloudBadge('<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Nuvem Conectada (ile-ase-gestao)');
-      } catch (err) {
-        console.warn("Sincronização inicial em modo local/contingência:", err);
-        setCloudBadge('<span class="w-2 h-2 rounded-full bg-amber-300"></span> Modo Local Ativo (ile-ase-gestao)');
-      }
+      }, 600);
+    } catch (err) {
+      console.warn("Firebase indisponível:", err);
     }
-    ensureDefaultAdmin();
 
-    // LISTENERS EM TEMPO REAL (FIRESTORE)
-    onSnapshot(collection(db, "system_users"), (snapshot) => {
-      const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      state.users = docs.length ? docs : [DEFAULT_ADMIN];
-      renderUsersList();
-    }, (err) => console.warn("Listener system_users:", err));
+    function bindCollection(colName, targetArr, onUpdate) {
+      if (!db) return;
+      onSnapshot(collection(db, colName), (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        if (list.length || colName !== "system_users") {
+          state[targetArr] = list.length ? list : state[targetArr];
+        }
+        if (onUpdate) onUpdate();
+      }, (err) => console.warn("Snapshot erro em", colName, err));
+    }
 
-    onSnapshot(doc(db, "system_settings", "branding"), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().logoDataUrl) {
-        applyLogoEverywhere(docSnap.data().logoDataUrl);
-      }
-    }, (err) => console.warn("Listener branding:", err));
-
-    onSnapshot(collection(db, "members"), (snapshot) => {
-      state.members = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    bindCollection("system_users", "users", () => {
+      if (document.getElementById("usersModal")?.classList.contains("flex")) renderUsersList();
+    });
+    bindCollection("members", "members", () => {
       renderMembers();
+      populateCarneMembers();
       updateDashboard();
-    }, (err) => console.warn("Listener members:", err));
-
-    onSnapshot(collection(db, "finance"), (snapshot) => {
-      state.finance = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    });
+    bindCollection("finance", "finance", () => {
       renderFinance();
       updateDashboard();
-    }, (err) => console.warn("Listener finance:", err));
-
-    onSnapshot(collection(db, "events"), (snapshot) => {
-      state.events = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    });
+    bindCollection("carnes", "carnes", () => {
+      renderCarnes();
+    });
+    bindCollection("events", "events", () => {
       renderEvents();
       updateDashboard();
-    }, (err) => console.warn("Listener events:", err));
-
-    onSnapshot(collection(db, "gallery"), (snapshot) => {
-      state.gallery = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    });
+    bindCollection("gallery", "gallery", () => {
       renderGallery();
       updateDashboard();
-    }, (err) => console.warn("Listener gallery:", err));
+    });
 
-    // LOGIN POR PALAVRA-CHAVE
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    if (db) {
+      onSnapshot(doc(db, "system_settings", "branding"), (snap) => {
+        if (snap.exists() && snap.data().logoDataUrl) {
+          applyLogoEverywhere(snap.data().logoDataUrl);
+        }
+      });
+      onSnapshot(doc(db, "system_settings", "treasury_bank"), (snap) => {
+        if (snap.exists()) {
+          state.treasuryBank = { ...state.treasuryBank, ...snap.data() };
+          updateTreasuryBankSummary();
+          renderCarnes();
+        }
+      });
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      const userInp = document.getElementById("loginUser").value.trim().toLowerCase();
-      const passInp = document.getElementById("loginPass").value.trim();
+      const userInput = document.getElementById("loginUser").value.trim().toLowerCase();
+      const passInput = document.getElementById("loginPass").value.trim();
       const errBox = document.getElementById("loginError");
 
-      const list = state.users.length ? state.users : [DEFAULT_ADMIN];
-      let found = list.find(u => (u.username || "").trim().toLowerCase() === userInp && String(u.password || "").trim() === passInp);
-
-      if (!found && userInp === DEFAULT_ADMIN.username && passInp === DEFAULT_ADMIN.password) {
-        found = DEFAULT_ADMIN;
-      }
+      const found = state.users.find(
+        u => (u.username || "").toLowerCase() === userInput && String(u.password) === passInput
+      );
 
       if (!found) {
-        errBox.textContent = "Palavra-chave ou senha inválida. Verifique com a Administração Geral.";
+        errBox.textContent = "Palavra-chave ou senha inválida.";
         errBox.classList.remove("hidden");
         return;
       }
@@ -774,10 +987,15 @@
       document.getElementById("logoUploadSection").classList.toggle("hidden", !isAdmin);
 
       document.getElementById("btnAddFinance").classList.toggle("hidden", !(isAdmin || isTesoureiro));
+      document.getElementById("btnAddCarne").classList.toggle("hidden", !(isAdmin || isTesoureiro));
+      document.getElementById("btnTreasuryBank").classList.toggle("hidden", !(isAdmin || isTesoureiro));
       document.getElementById("btnAddMember").classList.toggle("hidden", !(isAdmin || isSecretario));
       document.getElementById("btnAddEvent").classList.toggle("hidden", !(isAdmin || isSecretario));
       document.getElementById("btnAddPhoto").classList.toggle("hidden", !(isAdmin || isSecretario));
 
+      populateCarneMembers();
+      updateTreasuryBankSummary();
+      renderCarnes();
       switchTab("dashboard");
       updateDashboard();
     }
@@ -990,6 +1208,7 @@
       if (idx >= 0) state.members[idx] = payload;
       else state.members.push(payload);
       renderMembers();
+      populateCarneMembers();
       updateDashboard();
 
       try {
@@ -1004,6 +1223,7 @@
       if (confirm("Excluir este cadastro?")) {
         state.members = state.members.filter(m => m.id !== id);
         renderMembers();
+        populateCarneMembers();
         updateDashboard();
         try {
           await deleteDoc(doc(db, "members", id));
@@ -1116,6 +1336,7 @@
       docPdf.save(`Carteirinha_${(m.civilName || "Membro").replace(/\s+/g, "_")}.pdf`);
     };
 
+    /* ================= LANÇAMENTOS DO CAIXA ================= */
     window.openFinanceModal = () => {
       document.getElementById("financeForm").reset();
       document.getElementById("fDate").value = new Date().toISOString().split("T")[0];
@@ -1255,21 +1476,412 @@
       pdf.save(`Recibo_IleAse_${f.date}_${f.person.replace(/\s+/g, "_")}.pdf`);
     };
 
+    /* ================= CARNÊS / RECIBOS INDIVIDUAIS + PIX ================= */
+    function updateTreasuryBankSummary() {
+      const el = document.getElementById("treasuryBankSummary");
+      if (!el) return;
+      const b = state.treasuryBank || {};
+      if (!b.pixKey) {
+        el.textContent = "Dados bancários / chave Pix ainda não cadastrados. Clique em 'Dados Bancários / Pix'.";
+        return;
+      }
+      el.textContent = `Banco: ${b.bankName || "-"} • Titular: ${b.holder || "-"} • Pix: ${b.pixKey}`;
+    }
+
+    window.openTreasuryBankModal = () => {
+      const b = state.treasuryBank || {};
+      document.getElementById("tbBankName").value = b.bankName || "";
+      document.getElementById("tbHolder").value = b.holder || "";
+      document.getElementById("tbAgency").value = b.agency || "";
+      document.getElementById("tbAccount").value = b.account || "";
+      document.getElementById("tbPixKey").value = b.pixKey || "";
+      document.getElementById("tbCity").value = b.city || "Itanhaem";
+      openModal("treasuryBankModal");
+    };
+
+    document.getElementById("treasuryBankForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      state.treasuryBank = {
+        bankName: document.getElementById("tbBankName").value.trim(),
+        holder: document.getElementById("tbHolder").value.trim(),
+        agency: document.getElementById("tbAgency").value.trim(),
+        account: document.getElementById("tbAccount").value.trim(),
+        pixKey: document.getElementById("tbPixKey").value.trim(),
+        city: document.getElementById("tbCity").value.trim() || "Itanhaem"
+      };
+      updateTreasuryBankSummary();
+      renderCarnes();
+      try {
+        await setDoc(doc(db, "system_settings", "treasury_bank"), state.treasuryBank);
+      } catch (err) {
+        console.warn("Falha ao salvar dados bancários na nuvem:", err);
+      }
+      closeModal("treasuryBankModal");
+    });
+
+    function populateCarneMembers() {
+      const sel = document.getElementById("cMemberSelect");
+      const filterSel = document.getElementById("carneFilterMember");
+      if (sel) {
+        sel.innerHTML = state.members.length
+          ? state.members.map(m => `<option value="${m.id}">${m.civilName}${m.sacredName ? ` (${m.sacredName})` : ""}</option>`).join("")
+          : '<option value="">Cadastre um integrante primeiro</option>';
+      }
+      if (filterSel) {
+        const current = filterSel.value;
+        filterSel.innerHTML = '<option value="">Todos os integrantes</option>' +
+          state.members.map(m => `<option value="${m.id}">${m.civilName}</option>`).join("");
+        filterSel.value = current;
+      }
+    }
+
+    window.toggleCarneModeFields = () => {
+      const mode = document.getElementById("cMode").value;
+      document.getElementById("cSingleFields").classList.toggle("hidden", mode !== "single");
+      document.getElementById("cAnnualFields").classList.toggle("hidden", mode !== "annual");
+    };
+
+    window.openCarneModal = () => {
+      populateCarneMembers();
+      if (!state.members.length) {
+        alert("Cadastre ao menos um integrante na aba 'Filhos da Casa & Carteirinhas' antes de gerar o carnê.");
+        return;
+      }
+      document.getElementById("carneForm").reset();
+      populateCarneMembers();
+      const now = new Date();
+      document.getElementById("cMonthRef").value = now.toISOString().slice(0, 7);
+      document.getElementById("cDueDate").value = now.toISOString().slice(0, 10);
+      document.getElementById("cYearRef").value = String(now.getFullYear());
+      document.getElementById("cDueDay").value = "10";
+      toggleCarneModeFields();
+      openModal("carneModal");
+    };
+
+    function crc16Ccitt(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+          if ((crc & 0x8000) !== 0) crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+          else crc = (crc << 1) & 0xFFFF;
+        }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, "0");
+    }
+
+    function tlv(id, value) {
+      const v = String(value || "");
+      return id + String(v.length).padStart(2, "0") + v;
+    }
+
+    function buildPixPayload(amount, txid = "ILEASE") {
+      const b = state.treasuryBank || {};
+      const pixKey = String(b.pixKey || "").trim();
+      if (!pixKey) return "";
+      const merchantName = (b.holder || "ILE ASE OMO ADEOLA")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 25) || "ILE ASE OMO ADEOLA";
+      const merchantCity = (b.city || "ITANHAEM")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9 ]/g, "").trim().slice(0, 15) || "ITANHAEM";
+      const amtStr = Number(amount || 0).toFixed(2);
+      const cleanTxid = String(txid || "ILEASE").replace(/[^a-zA-Z0-9]/g, "").slice(0, 20) || "ILEASE";
+
+      const gui = tlv("00", "br.gov.bcb.pix");
+      const keyField = tlv("01", pixKey);
+      const merchantAccountInfo = tlv("26", gui + keyField);
+      const additionalData = tlv("62", tlv("05", cleanTxid));
+
+      const basePayload =
+        tlv("00", "01") +
+        merchantAccountInfo +
+        tlv("52", "0000") +
+        tlv("53", "986") +
+        tlv("54", amtStr) +
+        tlv("58", "BR") +
+        tlv("59", merchantName) +
+        tlv("60", merchantCity) +
+        additionalData +
+        "6304";
+
+      return basePayload + crc16Ccitt(basePayload);
+    }
+
+    document.getElementById("carneForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const memberId = document.getElementById("cMemberSelect").value;
+      const member = state.members.find(m => m.id === memberId);
+      if (!member) return;
+
+      const mode = document.getElementById("cMode").value;
+      const amount = parseFloat(document.getElementById("cAmount").value);
+      const notes = document.getElementById("cNotes").value.trim() || "Mensalidade — Ilê Asè Omo Adeolá";
+
+      const records = [];
+      if (mode === "annual") {
+        const year = parseInt(document.getElementById("cYearRef").value, 10) || new Date().getFullYear();
+        const dueDay = Math.min(28, Math.max(1, parseInt(document.getElementById("cDueDay").value, 10) || 10));
+        for (let m = 1; m <= 12; m++) {
+          const mm = String(m).padStart(2, "0");
+          const comp = `${year}-${mm}`;
+          const dueDate = `${year}-${mm}-${String(dueDay).padStart(2, "0")}`;
+          const id = `carne_${memberId}_${comp}_${Date.now()}_${m}`;
+          records.push({
+            id,
+            memberId,
+            memberName: member.civilName,
+            competence: comp,
+            dueDate,
+            amount,
+            notes,
+            status: "pendente",
+            paidDate: ""
+          });
+        }
+      } else {
+        const comp = document.getElementById("cMonthRef").value || new Date().toISOString().slice(0, 7);
+        const dueDate = document.getElementById("cDueDate").value || new Date().toISOString().slice(0, 10);
+        const id = `carne_${memberId}_${comp}_${Date.now()}`;
+        records.push({
+          id,
+          memberId,
+          memberName: member.civilName,
+          competence: comp,
+          dueDate,
+          amount,
+          notes,
+          status: "pendente",
+          paidDate: ""
+        });
+      }
+
+      state.carnes.push(...records);
+      renderCarnes();
+      closeModal("carneModal");
+
+      for (const rec of records) {
+        try {
+          await setDoc(doc(db, "carnes", rec.id), rec);
+        } catch (err) {
+          console.warn("Falha ao salvar carnê na nuvem:", err);
+        }
+      }
+    });
+
+    function renderCarnes() {
+      const tbody = document.getElementById("carnesTableBody");
+      if (!tbody) return;
+      const fMember = document.getElementById("carneFilterMember")?.value || "";
+      const fStatus = document.getElementById("carneFilterStatus")?.value || "";
+      const canEdit = state.currentUser?.role === "admin" || state.currentUser?.role === "tesoureiro";
+
+      const list = state.carnes.filter(c => {
+        if (fMember && c.memberId !== fMember) return false;
+        if (fStatus && c.status !== fStatus) return false;
+        return true;
+      }).sort((a, b) => (a.competence || "").localeCompare(b.competence || ""));
+
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-6 text-center text-slate-400 text-xs">Nenhum carnê ou cobrança individual encontrada.</td></tr>';
+        return;
+      }
+
+      const fmt = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      tbody.innerHTML = list.map(c => `
+        <tr class="hover:bg-slate-50">
+          <td class="px-5 py-3">
+            <p class="font-bold text-slate-900">${c.memberName}</p>
+            <p class="text-[11px] text-slate-500">${c.notes || ""}</p>
+          </td>
+          <td class="px-5 py-3 text-xs text-slate-600">
+            <p class="font-bold">Comp.: ${c.competence}</p>
+            <p>Venc.: ${c.dueDate}</p>
+          </td>
+          <td class="px-5 py-3 font-bold text-emerald-700">${fmt(c.amount)}</td>
+          <td class="px-5 py-3">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${c.status === 'pago' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}">
+              ${c.status === 'pago' ? 'Pago' : 'Pendente'}
+            </span>
+          </td>
+          <td class="px-5 py-3 text-right space-x-1.5">
+            <button onclick="openCarneViewModal('${c.id}')" class="px-3 py-1.5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold">
+              <i class="fa-solid fa-qrcode"></i> Pix / Recibo
+            </button>
+            ${canEdit && c.status !== 'pago' ? `
+              <button onclick="markCarnePaid('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold" title="Marcar como Pago">
+                <i class="fa-solid fa-check"></i>
+              </button>
+            ` : ""}
+            ${canEdit ? `
+              <button onclick="deleteCarne('${c.id}')" class="px-2.5 py-1.5 rounded-xl bg-red-100 text-red-700 text-xs font-bold">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            ` : ""}
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    window.markCarnePaid = async (id) => {
+      const c = state.carnes.find(x => x.id === id);
+      if (!c) return;
+      c.status = "pago";
+      c.paidDate = new Date().toISOString().split("T")[0];
+      renderCarnes();
+
+      const finId = "fin_" + Date.now();
+      const finPayload = {
+        id: finId,
+        type: "entrada",
+        date: c.paidDate,
+        person: c.memberName,
+        desc: `Mensalidade (${c.competence}) — ${c.notes}`,
+        amount: Number(c.amount),
+        createdBy: state.currentUser?.name || "Tesouraria"
+      };
+      state.finance.push(finPayload);
+      renderFinance();
+      updateDashboard();
+
+      try {
+        await setDoc(doc(db, "carnes", c.id), c);
+        await setDoc(doc(db, "finance", finId), finPayload);
+      } catch (err) {
+        console.warn("Falha ao baixar carnê na nuvem:", err);
+      }
+    };
+
+    window.deleteCarne = async (id) => {
+      if (!confirm("Remover esta parcela do carnê?")) return;
+      state.carnes = state.carnes.filter(c => c.id !== id);
+      renderCarnes();
+      try {
+        await deleteDoc(doc(db, "carnes", id));
+      } catch (err) {
+        console.warn("Falha ao remover carnê na nuvem:", err);
+      }
+    };
+
+    window.openCarneViewModal = (id) => {
+      const c = state.carnes.find(x => x.id === id);
+      if (!c) return;
+      const b = state.treasuryBank || {};
+      const valFmt = Number(c.amount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const pixPayload = buildPixPayload(c.amount, c.id.slice(-12));
+
+      document.getElementById("cvMemberName").textContent = c.memberName;
+      document.getElementById("cvCompetence").textContent = `Competência: ${c.competence} • Vencimento: ${c.dueDate} • Status: ${c.status === "pago" ? "PAGO" : "PENDENTE"}`;
+      document.getElementById("cvAmount").textContent = valFmt;
+      document.getElementById("cvBankInfo").textContent = b.pixKey
+        ? `Banco: ${b.bankName || "-"} | Ag: ${b.agency || "-"} | Conta: ${b.account || "-"} | Pix: ${b.pixKey}`
+        : "Cadastre os dados bancários e a chave Pix em 'Dados Bancários / Pix'.";
+
+      document.getElementById("cvPixPayload").value = pixPayload || "Configure a Chave Pix da Tesouraria para gerar o código Copia e Cola.";
+
+      const qrContainer = document.getElementById("cvQrContainer");
+      qrContainer.innerHTML = "";
+      if (pixPayload && window.QRCode) {
+        new window.QRCode(qrContainer, {
+          text: pixPayload,
+          width: 132,
+          height: 132,
+          correctLevel: window.QRCode.CorrectLevel.M
+        });
+      }
+
+      document.getElementById("cvDownloadPdfBtn").onclick = () => downloadCarnePDF(c, pixPayload);
+      openModal("carneViewModal");
+    };
+
+    window.copyCarnePix = () => {
+      const txt = document.getElementById("cvPixPayload")?.value || "";
+      if (!txt || txt.startsWith("Configure")) return;
+      navigator.clipboard?.writeText(txt);
+      alert("Código Pix Copia e Cola copiado!");
+    };
+
+    function downloadCarnePDF(c, pixPayload) {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const b = state.treasuryBank || {};
+      const valFmt = Number(c.amount || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+      pdf.setDrawColor(180, 83, 9);
+      pdf.setLineWidth(1);
+      pdf.rect(15, 15, 180, 155);
+
+      try {
+        pdf.addImage(state.logoDataUrl, "PNG", 22, 20, 22, 22);
+      } catch (e) {}
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+      pdf.setTextColor(120, 53, 15);
+      pdf.text("ILÊ ASÈ OMO ADEOLÁ", 112, 28, { align: "center" });
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(100, 116, 139);
+      pdf.text("Carnê / Recibo Individual de Mensalidade", 112, 34, { align: "center" });
+
+      pdf.setFillColor(254, 243, 199);
+      pdf.rect(22, 47, 166, 12, "F");
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(11);
+      pdf.setTextColor(120, 53, 15);
+      pdf.text(`PARCELA / MENSALIDADE — ${valFmt} (${c.status === "pago" ? "PAGO" : "PENDENTE"})`, 105, 55, { align: "center" });
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.setTextColor(30, 41, 59);
+      pdf.text(`Integrante: ${c.memberName}`, 24, 68);
+      pdf.text(`Competência: ${c.competence}   |   Vencimento: ${c.dueDate}`, 24, 75);
+      pdf.text(`Referente a: ${c.notes || "Mensalidade"}`, 24, 82);
+
+      pdf.text(`Instituição: ${b.bankName || "-"}   |   Titular: ${b.holder || "-"}`, 24, 93);
+      pdf.text(`Agência: ${b.agency || "-"}   |   Conta: ${b.account || "-"}`, 24, 100);
+      pdf.text(`Chave Pix: ${b.pixKey || "-"}`, 24, 107);
+
+      if (pixPayload) {
+        pdf.setFontSize(8);
+        const pixLines = pdf.splitTextToSize(`Pix Copia e Cola: ${pixPayload}`, 162);
+        pdf.text(pixLines, 24, 118);
+      }
+
+      pdf.line(55, 152, 155, 152);
+      pdf.setFontSize(8.5);
+      pdf.text("Tesouraria / Administração — Ilê Asè Omo Adeolá", 105, 158, { align: "center" });
+
+      pdf.save(`Carne_IleAse_${c.competence}_${(c.memberName || "Membro").replace(/\s+/g, "_")}.pdf`);
+    }
+
+    /* ================= EVENTOS & CONVITES (COM FOTO TEMÁTICA + COR DE FUNDO) ================= */
     window.openEventModal = () => {
       document.getElementById("eventForm").reset();
+      document.getElementById("eLocation").value = "Ilê Asè Omo Adeolá — Itanhaém/SP";
+      document.getElementById("eTime").value = "20:00";
+      document.getElementById("eBgColor").value = "#451a03";
       openModal("eventModal");
     };
 
     document.getElementById("eventForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = "evt_" + Date.now();
+      const themeFile = document.getElementById("eThemeImage").files[0];
+      let themeImageUrl = "";
+      if (themeFile) {
+        themeImageUrl = await compressImage(themeFile, 700);
+      }
+
       const payload = {
         id,
         title: document.getElementById("eTitle").value.trim(),
         date: document.getElementById("eDate").value,
         time: document.getElementById("eTime").value,
         location: document.getElementById("eLocation").value.trim(),
-        notes: document.getElementById("eNotes").value.trim()
+        notes: document.getElementById("eNotes").value.trim(),
+        bgColor: document.getElementById("eBgColor").value || "#451a03",
+        themeImageUrl
       };
       state.events.push(payload);
       renderEvents();
@@ -1309,37 +1921,73 @@
           <div>
             <div class="flex items-center justify-between gap-2">
               <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900">${ev.date} às ${ev.time}</span>
-              ${canEdit ? `<button onclick="deleteEvent('${ev.id}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash"></i></button>` : ""}
+              <div class="flex items-center gap-2">
+                <span class="w-4 h-4 rounded-full border border-slate-300 inline-block" style="background-color:${ev.bgColor || '#451a03'}" title="Cor de fundo do convite"></span>
+                ${canEdit ? `<button onclick="deleteEvent('${ev.id}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash"></i></button>` : ""}
+              </div>
             </div>
             <h3 class="font-sacred text-lg font-bold text-slate-900 mt-3">${ev.title}</h3>
             <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-location-dot text-amber-700"></i> ${ev.location}</p>
             <p class="text-sm text-slate-600 mt-3">${ev.notes || ""}</p>
+            ${ev.themeImageUrl ? `<img src="${ev.themeImageUrl}" alt="Imagem temática" class="mt-3 w-full h-36 object-cover rounded-xl border border-slate-200" />` : ""}
           </div>
           <button onclick="downloadSocialFlyer('${ev.id}')" class="w-full py-2.5 rounded-xl gold-gradient text-white text-xs font-bold shadow flex items-center justify-center gap-2 hover:opacity-95">
-            <i class="fa-solid fa-share-nodes"></i> Baixar Informativo c/ Logo (PNG)
+            <i class="fa-solid fa-share-nodes"></i> Baixar Convite c/ Logo (PNG)
           </button>
         </div>
       `).join("");
+    }
+
+    function isLightColor(hex) {
+      const clean = String(hex || "#451a03").replace("#", "");
+      if (clean.length !== 6) return false;
+      const r = parseInt(clean.slice(0, 2), 16);
+      const g = parseInt(clean.slice(2, 4), 16);
+      const b = parseInt(clean.slice(4, 6), 16);
+      return (0.299 * r + 0.587 * g + 0.114 * b) > 180;
     }
 
     window.downloadSocialFlyer = async (id) => {
       const ev = state.events.find(x => x.id === id);
       if (!ev) return;
 
+      const flyerEl = document.getElementById("socialFlyer");
+      const bg = ev.bgColor || "#451a03";
+      const light = isLightColor(bg);
+
+      flyerEl.style.backgroundColor = bg;
+      flyerEl.style.color = light ? "#1e293b" : "#fffbeb";
+
       document.getElementById("flyerLogoImg").src = state.logoDataUrl;
+      document.getElementById("flyerBrandLabel").className = light
+        ? "font-sacred text-xs tracking-widest uppercase text-amber-900 font-bold"
+        : "font-sacred text-xs tracking-widest uppercase text-amber-300";
       document.getElementById("flyerTitle").textContent = ev.title;
       document.getElementById("flyerDateTime").textContent = `${ev.date.split("-").reverse().join("/")} • ${ev.time}h`;
+      document.getElementById("flyerDateTime").className = light
+        ? "text-sm font-bold text-amber-900"
+        : "text-sm font-bold text-amber-200";
       document.getElementById("flyerNotes").textContent = ev.notes || "Todos são bem-vindos com axé!";
       document.getElementById("flyerLocation").textContent = ev.location || "Ilê Asè Omo Adeolá";
 
-      const flyerEl = document.getElementById("socialFlyer");
+      const themeWrap = document.getElementById("flyerThemeWrap");
+      const themeImg = document.getElementById("flyerThemeImg");
+      if (ev.themeImageUrl) {
+        themeImg.src = ev.themeImageUrl;
+        themeWrap.classList.remove("hidden");
+      } else {
+        themeImg.src = "";
+        themeWrap.classList.add("hidden");
+      }
+
       const canvas = await window.html2canvas(flyerEl, { scale: 2, useCORS: true });
       const link = document.createElement("a");
-      link.download = `Informativo_IleAse_${ev.title.replace(/\s+/g, "_")}.png`;
+      link.download = `Convite_IleAse_${ev.title.replace(/\s+/g, "_")}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     };
 
+    /* ================= ACERVO FOTOGRÁFICO ================= */
     window.openPhotoModal = () => {
       document.getElementById("photoForm").reset();
       openModal("photoModal");
